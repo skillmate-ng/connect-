@@ -1,0 +1,2463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#ffffff" />
+<title>Skill Mate — Find Jobs & Apprentices Near You</title>
+<meta name="description" content="Skill Mate is Nigeria's marketplace for jobs, apprenticeships and skilled workers. Post a job or find one near you — free for job seekers, always." />
+<meta property="og:title" content="Skill Mate — Find Jobs & Apprentices Near You" />
+<meta property="og:description" content="Post a job, find an apprenticeship, or hire skilled workers near you — across all 36 states and the FCT." />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+:root{
+  --bg:#ffffff; --surface:#ffffff; --surface-2:#f4f6f9; --line:#e7ebf0;
+  --text:#12181f; --muted:#69737f; --primary:#2f5eff; --primary-2:#00c2a8;
+  --accent:#ffb400; --danger:#e6484f;
+  --radius:16px; --shadow:0 16px 40px -22px rgba(20,30,60,.20);
+  --grad:linear-gradient(135deg,var(--primary),var(--primary-2));
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:104px}
+h1,h2,h3,.brand{font-family:Sora,Manrope,sans-serif;letter-spacing:-.02em;margin:0}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+.wrap{width:min(1160px,92vw);margin:0 auto}
+.hidden{display:none !important}
+
+
+/* LANDING */
+#view-landing{min-height:calc(100vh - 70px);display:grid;place-items:center;position:relative;overflow:hidden;background:var(--bg)}
+.landing-bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:background-image .7s ease;filter:saturate(.95)}
+.landing-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,10,20,.86),rgba(5,10,20,.62),rgba(5,10,20,.28))}
+.landing-content{position:relative;z-index:2;width:min(1120px,92vw);padding:70px 0;color:#fff}
+.landing-kicker{display:inline-flex;padding:8px 13px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);backdrop-filter:blur(8px);border-radius:999px;font-weight:700;font-size:12px}
+.landing-content h1{font-size:clamp(40px,7vw,76px);line-height:1.02;max-width:760px;margin:18px 0 16px}
+.landing-content h1 strong{display:block;color:#fff}
+.landing-content p{font-size:clamp(16px,2vw,20px);line-height:1.65;max-width:650px;color:#e8edf6}
+.landing-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.landing-actions .btn{min-width:135px}
+.landing-dots{display:flex;gap:7px;margin-top:30px}.landing-dot{width:28px;height:4px;border-radius:99px;background:rgba(255,255,255,.35)}.landing-dot.on{background:#fff}
+.announcement-fab{position:fixed;right:16px;top:86px;width:48px;height:48px;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--text);box-shadow:var(--shadow);z-index:980;cursor:pointer;font-size:21px}
+.announcement-fab .unread{position:absolute;right:-2px;top:-2px;width:16px;height:16px;border-radius:50%;background:var(--danger);border:2px solid var(--surface)}
+[data-theme="dark"] .announcement-fab{box-shadow:0 10px 30px rgba(0,0,0,.35)}
+@media(max-width:640px){.landing-content{padding:44px 0}.landing-content h1{font-size:42px}.announcement-fab{top:78px;right:10px}}
+/* DARK THEME */
+html[data-theme="dark"]{--bg:#0a0f17;--surface:#111925;--surface-2:#182230;--line:#293548;--text:#edf2f8;--muted:#9aa8b8;--primary:#6d8cff;--primary-2:#16cbb6;--accent:#ffc54d;--danger:#ff6670;--shadow:0 18px 50px -20px rgba(0,0,0,.65)}
+html[data-theme="dark"] header.nav{background:rgba(10,15,23,.88)}
+html[data-theme="dark"] .bottomnav{background:#111925;border-color:#293548}
+html[data-theme="dark"] .modal{background:rgba(0,0,0,.72)}
+html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:#0d1520;color:var(--text);border-color:var(--line)}
+html[data-theme="dark"] .skill .thumb .e{background:var(--surface);border-color:var(--line)}
+html[data-theme="dark"] .promo{background:#070b11}
+
+/* NAV */
+header.nav{position:sticky;top:0;z-index:900;backdrop-filter:blur(14px);background:rgba(255,255,255,.86);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;gap:18px;padding:14px 0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;cursor:pointer}
+.logo{width:34px;height:34px;border-radius:11px;background:var(--grad);display:grid;place-items:center;color:#fff;font-weight:800}
+nav.links{display:flex;gap:6px;margin-left:auto;align-items:center;flex-wrap:wrap}
+.navlink{padding:9px 13px;border-radius:10px;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer}
+.navlink:hover,.navlink.active{color:var(--text);background:var(--surface-2)}
+.btn{border:0;cursor:pointer;font-family:inherit;font-weight:700;font-size:14px;padding:11px 18px;border-radius:12px;background:var(--grad);color:#fff;transition:.18s;display:inline-flex;gap:8px;align-items:center;justify-content:center}
+.btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px -12px var(--primary)}
+.btn:active{transform:translateY(0) scale(.97)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.btn.sm{padding:8px 13px;font-size:13px}
+.btn.block{width:100%}
+.btn.danger{background:var(--danger);color:#fff}
+.avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);background:var(--surface-2)}
+
+/* BOTTOM NAV — modern floating tab bar */
+.bottomnav{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:2px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px;box-shadow:0 18px 44px -14px rgba(20,30,60,.24);z-index:950}
+.bn-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 15px;border-radius:14px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:.18s;min-width:60px;-webkit-tap-highlight-color:transparent}
+.bn-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bn-item:hover{background:var(--surface-2);color:var(--text)}
+.bn-item.active{background:var(--grad);color:#fff}
+.bn-item.bn-cta{background:var(--text);color:#fff}
+.bn-item.bn-cta.active{background:var(--grad)}
+@media(max-width:640px){.bottomnav{left:10px;right:10px;bottom:10px;transform:none;justify-content:space-between;padding:5px}.bn-item{padding:7px 4px;min-width:0;flex:1}.bn-item span{font-size:9.5px}}
+
+
+/* ================= SOCIAL / CONNECT ================= */
+html.social-active, body.social-active{overscroll-behavior-y:none}
+#view-social{overscroll-behavior-y:none;height:100dvh;overflow:hidden}
+#socialVideos:not(.hidden){height:calc(100dvh - 46px);overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#socialVideos:not(.hidden)::-webkit-scrollbar{display:none}
+#socialProfile:not(.hidden),#socialUpdates:not(.hidden){height:calc(100dvh - 46px);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;scrollbar-width:none;padding-bottom:90px}
+#socialProfile:not(.hidden)::-webkit-scrollbar,#socialUpdates:not(.hidden)::-webkit-scrollbar{display:none}
+.social-shell{width:100%;max-width:none;margin:0;padding:0 0 8px}
+.social-top{position:sticky;top:0;z-index:20;padding:8px 12px;background:linear-gradient(180deg,#0a0f17 72%,rgba(10,15,23,0));display:flex;justify-content:flex-end;pointer-events:none}
+.social-brand{display:flex;justify-content:flex-end;width:100%}
+.social-back{pointer-events:auto;display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.12);background:rgba(20,28,39,.72);backdrop-filter:blur(12px);color:#fff;border-radius:999px;padding:8px 11px;font:800 12px Manrope;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.22);transition:.15s}
+.social-back:active{transform:scale(.94)}
+.social-video-wrap{position:relative;width:min(430px,100vw);aspect-ratio:9/16;height:auto;min-height:0;margin:0 auto 8px;border-radius:18px;overflow:hidden;background:#05080d;border:0;box-shadow:0 18px 60px -20px rgba(0,0,0,.6);scroll-snap-align:start;scroll-snap-stop:always}
+.social-video,.social-tiktok-embed{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#05080d;border:0}
+.social-video-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 34%,rgba(0,0,0,.86) 100%);pointer-events:none}
+.social-playflash{position:absolute;inset:0;display:grid;place-items:center;z-index:8;pointer-events:none;opacity:0}
+.social-playflash.show{animation:socialPlayFlash .42s cubic-bezier(.2,.7,.2,1)}
+.social-playflash .playmark{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:rgba(7,11,17,.45);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(10px);color:#fff;font-size:28px;transform:scale(.8);box-shadow:0 10px 30px rgba(0,0,0,.4)}
+@keyframes socialPlayFlash{0%{opacity:0;transform:scale(.8)}18%{opacity:1;transform:scale(1)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
+@keyframes socialHeartPop{0%{transform:scale(1)}35%{transform:scale(1.35)}60%{transform:scale(.92)}100%{transform:scale(1)}}
+.social-progress{position:absolute;top:12px;left:16px;right:16px;height:3px;display:flex;gap:6px;z-index:3}
+.social-progress i{height:100%;flex:1;border-radius:99px;background:rgba(255,255,255,.22);overflow:hidden}
+.social-progress i.active{background:linear-gradient(90deg,#25D366,#34d1ff)}
+.social-video-head{position:absolute;top:26px;left:16px;right:16px;display:flex;align-items:center;gap:10px;z-index:4;color:#fff}
+.social-video-head .avatar{width:42px;height:42px;border-radius:50%;border:2.5px solid transparent;background-image:linear-gradient(#05080d,#05080d),conic-gradient(from 180deg,#25D366,#34d1ff,#8b5cf6,#ff6bcb,#25D366);background-origin:border-box;background-clip:content-box,border-box;object-fit:cover}
+.social-video-head b{font-size:14px;letter-spacing:.1px}.social-video-head small{opacity:.75;font-size:11.5px}
+.social-more{margin-left:auto;border:0;background:rgba(0,0,0,.28);color:#fff;width:34px;height:34px;border-radius:50%;font-size:19px;cursor:pointer;backdrop-filter:blur(8px);transition:.15s}
+.social-more:active{transform:scale(.9)}
+.social-tiktok-badge{position:absolute;top:26px;right:60px;z-index:4;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.42);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);color:#fff;font:800 10.5px Manrope;padding:6px 10px;border-radius:999px}
+.social-actions{position:absolute;left:auto;right:12px;bottom:78px;transform:none;display:flex;flex-direction:column;align-items:center;gap:16px;z-index:5;color:#fff}
+.social-action{border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-family:inherit;padding:0;min-width:44px}
+.social-action .ico{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(7,11,17,.4);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);font-size:20px;line-height:1;transition:transform .15s,background .15s;box-shadow:0 6px 18px rgba(0,0,0,.28)}
+.social-action:active .ico{transform:scale(.88)}
+.social-action.active .ico{background:linear-gradient(135deg,#25D366,#128C7E)}
+.social-action.liked .ico{color:#ff4d67;animation:socialHeartPop .38s ease}
+.social-action.saved .ico{color:#8b5cf6}
+.social-action span{font-size:10px;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.6);line-height:1}
+.social-caption{position:absolute;left:16px;right:76px;bottom:26px;color:#fff;z-index:4}
+.social-caption .tag{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px);color:#fff;margin-bottom:10px;border-radius:999px;font-size:11px;font-weight:800}
+.social-caption .tag::before{content:"🎵"}
+.social-caption h3{font-family:Manrope;font-size:15.5px;font-weight:700;margin-bottom:6px;line-height:1.4}
+.social-caption p{margin:0;line-height:1.5;font-size:13px;color:#eef1f6}
+.social-caption .hash{color:#7fd1ff;margin-top:6px;font-weight:600}
+.social-playerbar{position:absolute;left:14px;right:14px;bottom:9px;height:3px;background:rgba(255,255,255,.28);z-index:5;border-radius:99px;overflow:hidden}
+.social-playerbar i{display:block;width:26%;height:100%;background:linear-gradient(90deg,#25D366,#34d1ff);border-radius:99px}
+.social-empty{padding:70px 20px;text-align:center;color:var(--muted)}
+.social-empty h3{font-family:Sora;margin-bottom:6px}
+.social-profile{padding:20px 2px 0}
+.social-profile-head{display:grid;grid-template-columns:96px 1fr auto;gap:16px;align-items:center}
+.social-profile-avatar{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid transparent;background-image:linear-gradient(var(--surface),var(--surface)),conic-gradient(from 180deg,#25D366,#34d1ff,#8b5cf6,#ff6bcb,#25D366);background-origin:border-box;background-clip:content-box,border-box;box-shadow:0 10px 30px -12px rgba(0,0,0,.3)}
+.social-profile h2{font-size:22px;font-family:Sora}
+.social-handle{color:var(--muted);margin-top:2px;font-size:13px}
+.social-stats{display:flex;align-items:center;gap:0;margin-top:18px;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.social-stats>*{flex:1;text-align:center;padding:12px 8px;border-right:1px solid var(--line)}
+.social-stats>*:last-child{border-right:0}
+.social-stats b{display:block;font-family:Sora;font-size:17px}
+.social-stats span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.social-bio{color:var(--muted);font-size:13px;line-height:1.55;margin:16px 0}
+.social-profile-actions{display:flex;gap:8px;flex-wrap:wrap}
+.social-upload{border:0;cursor:pointer;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-weight:800;border-radius:12px;padding:10px 14px;font-family:inherit;box-shadow:0 8px 20px -8px rgba(37,211,102,.6);transition:.15s}
+.social-upload:active{transform:scale(.96)}
+.social-content-tabs{display:flex;border-bottom:1px solid var(--line);margin-top:20px;position:relative}
+.social-content-tabs button{flex:1;border:0;background:transparent;color:var(--muted);padding:13px 6px;font:700 13px Manrope;cursor:pointer;transition:color .15s}
+.social-content-tabs button.active{color:var(--text);box-shadow:inset 0 -2.5px 0 #25D366}
+.social-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:10px}
+.social-grid-item{aspect-ratio:9/13;border-radius:12px;overflow:hidden;background:var(--surface-2);position:relative;cursor:pointer;transition:transform .15s}
+.social-grid-item:active{transform:scale(.96)}
+.social-grid-item video,.social-grid-item img.gridthumb{width:100%;height:100%;object-fit:cover}
+.social-grid-item .g{position:absolute;inset:0;background:linear-gradient(180deg,transparent 42%,rgba(0,0,0,.78));}
+.social-grid-item .t{position:absolute;left:9px;right:8px;bottom:9px;color:#fff;font-size:11px;font-weight:800;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.social-grid-item .v{position:absolute;left:9px;bottom:26px;color:#fff;font-size:9.5px;opacity:.85;font-weight:700}
+.social-grid-item .tt{position:absolute;top:7px;right:7px;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);color:#fff;font-size:8.5px;font-weight:800;padding:3px 7px;border-radius:999px}
+.social-updates{padding-top:18px}
+.social-update{border:1px solid var(--line);border-radius:18px;background:var(--surface);padding:15px;margin-bottom:11px;box-shadow:0 10px 28px -22px rgba(20,30,50,.4);transition:.15s}
+.social-update-head{display:flex;gap:10px;align-items:center}
+.social-update-head .avatar{width:40px;height:40px;border-radius:50%;border:2px solid transparent;background-image:linear-gradient(var(--surface),var(--surface)),conic-gradient(from 180deg,#25D366,#34d1ff,#8b5cf6,#ff6bcb,#25D366);background-origin:border-box;background-clip:content-box,border-box;object-fit:cover}
+.social-update-body{font-size:14px;line-height:1.6;margin:12px 0}
+.social-update-actions{display:flex;gap:6px;color:var(--muted);font-size:12px}
+.social-update-actions button{border:0;background:var(--surface-2);color:inherit;cursor:pointer;font:700 12px Manrope;padding:7px 12px;border-radius:999px;transition:.15s}
+.social-update-actions button:active{transform:scale(.94)}
+.social-update-actions button.active{color:#ff4d67;background:rgba(255,77,103,.12)}
+.social-compose{display:flex;gap:10px;align-items:center;margin-bottom:16px}
+.social-compose .avatar{width:40px;height:40px}
+.social-compose button{flex:1;text-align:left;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);border-radius:999px;padding:12px 16px;font-family:inherit;cursor:pointer;transition:.15s}
+.social-compose button:hover{border-color:#25D366}
+.social-nav{display:none}
+
+.social-upload-tabs{display:flex;gap:6px;background:var(--surface-2);border-radius:999px;padding:4px;margin:14px 0}
+.social-upload-tabs button{flex:1;border:0;background:transparent;color:var(--muted);padding:9px 6px;border-radius:999px;font:800 12.5px Manrope;cursor:pointer;transition:.15s}
+.social-upload-tabs button.active{background:var(--surface);color:var(--text);box-shadow:0 4px 14px -6px rgba(0,0,0,.25)}
+
+.social-follow-count{cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;border:0;background:transparent;color:inherit;padding:0;font:inherit}
+.social-follow-count:hover b,.social-follow-count:hover span{color:#25D366}
+.social-sheet{position:fixed;inset:0;z-index:2050;background:rgba(3,7,12,.4);display:flex;align-items:flex-end;justify-content:center;animation:smFade .18s ease}
+.social-sheet-box{width:min(760px,100vw);height:min(56vh,560px);background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;box-shadow:0 -26px 90px -35px rgba(0,0,0,.7);display:flex;flex-direction:column;overflow:hidden}
+.social-sheet-box::before{content:"";width:40px;height:4px;background:var(--line);border-radius:99px;margin:10px auto 0}
+.social-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px 14px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,var(--surface-2),transparent)}
+.social-sheet-body{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.social-comment{display:flex;gap:9px;align-items:flex-start;padding:6px 2px}
+.social-comment .avatar{width:34px;height:34px;flex:none;border-radius:50%}
+.social-comment-body{flex:1;min-width:0;background:var(--surface-2);border-radius:14px;padding:9px 12px}
+.social-comment-body b{font-size:12.5px}.social-comment-body p{margin:3px 0 0;font-size:13px;line-height:1.45}
+.social-sheet-input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:var(--surface-2);align-items:center}
+.social-sheet-input input{flex:1;border-radius:999px;background:var(--surface)}
+.social-sheet-input .btn{border-radius:50%;width:40px;height:40px;padding:0;display:grid;place-items:center;flex:none;background:linear-gradient(135deg,#25D366,#128C7E)}
+.social-user-row{display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.social-user-row:last-child{border-bottom:0}
+.social-user-row .avatar{width:44px;height:44px;flex:none;border-radius:50%}
+@keyframes smFade{from{opacity:0}to{opacity:1}}
+@media(max-width:640px){.social-shell{width:100vw;padding:0 0 4px}.social-top{padding:7px 10px 5px}.social-video-wrap{width:100vw;max-width:none;border-radius:0;margin-bottom:0;aspect-ratio:9/16;scroll-snap-align:start}.social-actions{right:8px;bottom:70px}.social-caption{left:14px;right:76px;bottom:22px}.social-profile{padding:18px 14px}.social-profile-head{grid-template-columns:78px 1fr;}.social-profile-actions{grid-column:2}.social-profile-avatar{width:78px;height:78px}.social-stats{gap:20px}.social-grid{padding:0 14px}.social-updates{padding:14px}}
+
+/* HERO */
+.hero{position:relative;overflow:hidden;padding:56px 0 50px}
+.hero:before{content:"";position:absolute;inset:-40% 40% 40% -20%;background:radial-gradient(circle,rgba(47,94,255,.10),transparent 60%);filter:blur(20px)}
+.hero-in{position:relative;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+.tag{display:inline-flex;gap:8px;align-items:center;padding:7px 14px;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--muted);background:var(--surface-2)}
+h1.big{font-size:clamp(32px,5vw,52px);line-height:1.06;margin:18px 0 14px}
+h1.big span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--muted);font-size:17px;max-width:52ch}
+.searchcard{margin-top:26px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr 1fr auto;gap:10px}
+input,select,textarea{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);font-family:inherit;font-size:14.5px;outline:none;transition:.16s}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(47,94,255,.12);background:var(--surface)}
+label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.06em}
+.stats{display:flex;gap:26px;margin-top:26px;flex-wrap:wrap}
+.stat b{display:block;font-family:Sora;font-size:22px}
+.stat span{color:var(--muted);font-size:13px}
+.heroart{position:relative}
+.heroart .photo{height:180px;border-radius:24px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px;background:var(--surface-2) center/cover no-repeat}
+.heroart .cards{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:var(--shadow)}
+.mini{display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:var(--surface-2);margin-bottom:10px}
+.mini:last-child{margin-bottom:0}
+.mini .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(47,94,255,.10);font-size:20px;flex-shrink:0}
+.mini b{font-size:14px}.mini p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+
+section{padding:44px 0}
+.sec-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.sec-head h2{font-size:clamp(22px,3vw,30px)}
+.sec-head p{color:var(--muted);margin:6px 0 0;font-size:14.5px}
+
+.skills{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.skill{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;transition:.18s}
+.skill:hover{border-color:var(--primary);transform:translateY(-3px);box-shadow:var(--shadow)}
+.skill .thumb{height:76px;background:var(--surface-2) center/cover no-repeat;position:relative}
+.skill .thumb .e{position:absolute;bottom:-14px;left:12px;width:32px;height:32px;border-radius:10px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:16px;box-shadow:0 4px 10px -4px rgba(0,0,0,.25)}
+.skill .info{padding:20px 12px 12px}
+.skill b{display:block;font-size:14px}
+.skill span{font-size:12px;color:var(--muted)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;transition:.22s cubic-bezier(.2,.8,.2,1)}
+.card:hover{border-color:var(--primary);transform:translateY(-4px);box-shadow:var(--shadow)}
+.card .cover{height:150px;background:var(--surface-2) center/cover no-repeat;position:relative;transition:.35s ease}
+.card:hover .cover{background-size:108%}
+.card .body{padding:15px;display:flex;flex-direction:column;gap:9px;flex:1}
+.badge{display:inline-block;padding:5px 10px;border-radius:999px;font-size:11.5px;font-weight:700;background:rgba(47,94,255,.10);color:var(--primary)}
+.badge.gold{background:rgba(255,180,0,.15);color:#a06a00}
+.badge.grey{background:var(--surface-2);color:var(--muted)}
+.badge.red{background:rgba(230,72,79,.12);color:var(--danger)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.meta{color:var(--muted);font-size:13px}
+.card h3{font-size:16.5px}
+.spread{display:flex;justify-content:space-between;align-items:center;gap:10px}
+
+/* PROMO / EMPLOYER BANNER */
+.promo{border-radius:24px;overflow:hidden;position:relative;display:grid;grid-template-columns:1.1fr .9fr;align-items:stretch;box-shadow:var(--shadow);background:var(--text)}
+.promo .copy{padding:38px;color:#fff;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.promo .copy h2{color:#fff;font-size:clamp(20px,3vw,28px)}
+.promo .copy p{color:#c7cede;font-size:14.5px;max-width:44ch}
+.promo .img{background:var(--surface-2) center/cover no-repeat;min-height:220px}
+@media(max-width:800px){.promo{grid-template-columns:1fr}.promo .img{min-height:160px;order:-1}}
+
+/* MAP */
+#map{height:400px;border-radius:var(--radius);border:1px solid var(--line);z-index:1}
+.mapbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+
+/* FORMS / PANELS */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px;box-shadow:var(--shadow)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.full{grid-column:1/-1}
+.auth-wrap{display:grid;place-items:center;padding:50px 0}
+.auth{width:min(560px,94vw)}
+.switcher{display:flex;gap:8px;background:var(--surface-2);padding:6px;border-radius:14px;margin-bottom:20px}
+.switcher button{flex:1;padding:10px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-weight:700;font-family:inherit;cursor:pointer;transition:.18s}
+.switcher button.on{background:var(--grad);color:#fff;box-shadow:0 8px 18px -10px var(--primary)}
+.upload{border:1.5px dashed var(--line);border-radius:14px;padding:16px;text-align:center;cursor:pointer;color:var(--muted);font-size:13.5px;transition:.18s}
+.upload:hover{border-color:var(--primary);background:rgba(47,94,255,.05);color:var(--primary)}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:44px}
+.pw-eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;padding:8px;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.pw-eye:hover{color:var(--primary)}
+.pw-eye svg{width:19px;height:19px}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.thumb-wrap{position:relative;width:78px;height:78px}
+.thumb-wrap img,.thumb-wrap video{width:78px;height:78px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block}
+.thumb-remove{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:999px;background:var(--danger);color:#fff;border:2px solid var(--surface);font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-weight:800}
+.thumb-remove:hover{filter:brightness(1.12);transform:scale(1.08)}
+
+/* MODAL */
+.modal{position:fixed;inset:0;background:rgba(15,20,30,.55);backdrop-filter:blur(3px);z-index:1000;display:grid;place-items:center;padding:20px;overflow:auto;animation:fadeIn .18s ease}
+/* ---- WhatsApp channel popup: separate from the announcement modal ---- */
+#waChannelPopup{position:fixed;inset:0;background:rgba(10,14,20,.6);backdrop-filter:blur(3px);z-index:1400;display:grid;place-items:center;padding:20px;animation:fadeIn .18s ease}
+#waChannelPopup .wa-box{position:relative;width:min(360px,92vw);border-radius:22px;padding:30px 22px 24px;text-align:center;animation:modalPop .22s cubic-bezier(.2,.8,.2,1)}
+#waChannelPopup .wa-box::before{content:"";position:absolute;inset:-3px;border-radius:24px;padding:3px;background:linear-gradient(120deg,#25D366,#128C7E,#34d1ff,#8b5cf6,#ff6bcb,#25D366);background-size:300% 300%;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:waGlow 3.2s linear infinite;filter:drop-shadow(0 0 12px rgba(37,211,102,.6))}
+@keyframes waGlow{0%{background-position:0% 50%;opacity:.7}50%{background-position:100% 50%;opacity:1}100%{background-position:0% 50%;opacity:.7}}
+#waChannelPopup .wa-x{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:14px;color:var(--text)}
+#waChannelPopup .wa-icon{font-size:42px;margin-bottom:6px}
+#waChannelPopup h3{margin:2px 0 6px;font-size:17px}
+#waChannelPopup p{margin:0 0 18px;font-size:13px}
+#waChannelPopup .wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--primary);color:#fff;border:0;border-radius:14px;padding:13px 20px;font-weight:800;font-size:14px;cursor:pointer;width:100%;text-decoration:none}
+#waChannelPopup .wa-btn:active{transform:scale(.98)}
+.modal .panel{width:min(760px,96vw);max-height:90vh;overflow:auto;animation:modalPop .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes modalPop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes glideInR{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
+@keyframes glideInL{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:translateX(0)}}
+.guide-step{animation:glideInR .32s cubic-bezier(.22,.9,.32,1)}
+.guide-step.back{animation-name:glideInL}
+
+/* SUPPORT CHAT */
+#chatWidget{position:fixed;right:18px;bottom:92px;z-index:960}
+#chatToggle{width:54px;height:54px;border-radius:50%;border:0;cursor:pointer;background:var(--grad);color:#fff;font-size:22px;box-shadow:0 18px 40px -14px rgba(20,30,60,.35);position:relative}
+.chat-badge{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;font-size:11px;font-weight:800;border-radius:999px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 4px}
+#chatPanel{position:fixed;right:18px;bottom:158px;width:min(340px,90vw);height:min(440px,68vh);background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;z-index:961}
+.chat-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.chat-close{border:0;background:transparent;cursor:pointer;font-size:14px;color:var(--muted)}
+.chat-body{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;padding:12px;display:flex;flex-direction:column;gap:8px}
+.chat-msg{max-width:80%;padding:9px 12px;border-radius:14px;font-size:13.5px;line-height:1.4}
+.chat-msg.me{align-self:flex-end;background:var(--grad);color:#fff;border-bottom-right-radius:4px}
+.chat-msg.admin{align-self:flex-start;background:var(--surface-2);color:var(--text);border-bottom-left-radius:4px}
+.chat-msg .t{display:block;margin-top:3px;font-size:10.5px;opacity:.7}
+.chat-input{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+.chat-input input{flex:1}
+@media(max-width:640px){#chatWidget{bottom:78px;right:12px}#chatPanel{bottom:140px;right:12px;width:calc(100vw - 24px)}}
+
+footer{border-top:1px solid var(--line);padding:30px 0 130px;color:var(--muted);font-size:13.5px;margin-top:30px}
+.toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;border:1px solid var(--text);padding:13px 20px;border-radius:12px;z-index:2000;font-weight:600;font-size:14px}
+.empty{padding:40px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:var(--radius)}
+@media(max-width:900px){.hero-in{grid-template-columns:1fr}.searchcard{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}nav.links{gap:2px}.navlink{padding:8px 9px;font-size:13px}.promo{grid-template-columns:1fr}}
+
+/* LIQUID GLASS / GLOW */
+.glass,.panel,.card,.searchcard,.heroart .cards,.promo,.bottomnav,.modal-box,.authbox,.chat-thread,.chat-list,.chat-center{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);background:linear-gradient(145deg,rgba(255,255,255,.78),rgba(255,255,255,.52));box-shadow:0 20px 60px -30px rgba(33,58,99,.28),inset 0 1px 0 rgba(255,255,255,.7)}
+[data-theme="dark"] .glass,[data-theme="dark"] .panel,[data-theme="dark"] .card,[data-theme="dark"] .searchcard,[data-theme="dark"] .heroart .cards,[data-theme="dark"] .promo,[data-theme="dark"] .bottomnav,[data-theme="dark"] .modal-box,[data-theme="dark"] .authbox,[data-theme="dark"] .chat-thread,[data-theme="dark"] .chat-list,[data-theme="dark"] .chat-center{background:linear-gradient(145deg,rgba(24,34,48,.86),rgba(12,20,31,.74));box-shadow:0 24px 70px -32px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.08)}
+.glow-ring{box-shadow:0 0 0 1px rgba(109,140,255,.18),0 0 45px rgba(109,140,255,.12)}
+.glass-hero{padding:30px;border:1px solid rgba(255,255,255,.18);border-radius:30px;background:linear-gradient(145deg,rgba(5,10,20,.26),rgba(5,10,20,.12));box-shadow:0 30px 90px -35px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.16)}
+.chat-center{position:fixed;right:18px;bottom:158px;width:min(760px,94vw);height:min(600px,72vh);z-index:965;border:1px solid var(--line);border-radius:24px;overflow:hidden;display:grid;grid-template-columns:240px 1fr}
+.chat-center-side{border-right:1px solid var(--line);overflow-y:auto;min-height:0;background:rgba(255,255,255,.22)}
+[data-theme="dark"] .chat-center-side{background:rgba(255,255,255,.02)}
+.chat-center-main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.chat-center-head{padding:14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.dm-back{display:none}
+.chat-center-body{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;padding:14px;display:flex;flex-direction:column;gap:9px}
+.chat-center-input{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+.chat-convo{display:flex;gap:10px;padding:11px;border-bottom:1px solid var(--line);cursor:pointer}
+.chat-convo:hover,.chat-convo.active{background:rgba(47,94,255,.08)}
+.chat-convo .av{width:34px;height:34px;flex:none;border-radius:50%;object-fit:cover;border:1px solid var(--line)}
+@media(max-width:640px){.chat-center{left:10px;right:10px;bottom:78px;width:auto;height:calc(100vh - 100px);grid-template-columns:1fr}.chat-center-side{display:none}.chat-center.show-side .chat-center-side{display:block;position:absolute;inset:0;z-index:2}.chat-center.show-side .chat-center-main{display:none}.glass-hero{padding:22px;border-radius:24px}}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" onclick="go('home')"><span class="logo">SM</span> Skill&nbsp;Mate <span style="font-size:14px">🇳🇬</span></a>
+    <nav class="links">
+      <span id="navAuth"></span>
+      <button class="btn sm" onclick="go('post')">+ Post a job</button>
+    </nav>
+  </div>
+</header>
+
+<button id="announcementFab" class="announcement-fab" onclick="openAnnouncements()" aria-label="Announcements" title="Announcements">📢<span id="announcementUnread" class="unread hidden"></span></button>
+
+<!-- ================= LANDING ================= -->
+<main id="view-landing">
+  <div id="landingBg" class="landing-bg"></div>
+  <div class="landing-content glass-hero">
+    <span class="landing-kicker">🇳🇬 Built for young Nigerians • Jobs • Skills • Apprenticeships</span>
+    <h1>Turn your skill into an <strong>opportunity.</strong></h1>
+    <p><b>Skill Mate</b> brings job seekers, apprentices, skilled workers, businesses and employers together in one trusted Nigerian marketplace. Find opportunities near you, showcase your skills, connect with people and build a better future.</p>
+    <div class="landing-actions">
+      <button class="btn" onclick="go('auth');authTab('signup')">Create an account</button>
+      <button class="btn ghost" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35);color:#fff" onclick="go('auth');authTab('login')">Log in</button>
+    </div>
+    <div class="landing-dots" id="landingDots"></div>
+  </div>
+</main>
+
+<!-- ================= HOME ================= -->
+<main id="view-home" class="hidden">
+  <div class="hero"><div class="wrap hero-in">
+    <div>
+      <span class="tag">🇳🇬 Nigeria's job & apprenticeship marketplace</span>
+      <h1 class="big">Find jobs &amp; apprentices,<br><span>near you.</span></h1>
+      <p class="lead">Skill Mate connects job seekers and apprentices with verified businesses and artisans looking to hire — across all 36 states and the FCT. Free for job seekers, always.</p>
+      <div class="searchcard">
+        <div><label>Skill / Job</label><input id="hSkill" list="skillList" placeholder="e.g. Phone Repair" /></div>
+        <div><label>State</label><select id="hState"></select></div>
+        <div style="display:flex;align-items:end"><button class="btn" onclick="heroSearch()">🔎 Find work</button></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="sOpps">0</b><span>Open jobs</span></div>
+        <div class="stat"><b id="sBiz">0</b><span>Employers hiring</span></div>
+        <div class="stat"><b id="sSkills">0</b><span>Skills & trades</span></div>
+      </div>
+    </div>
+    <div class="heroart">
+      <div class="photo" style="background:var(--grad);display:grid;place-items:center;font-size:64px">🇳🇬</div>
+      <div class="cards">
+        <div class="mini"><div class="ic">🎯</div><div><b>Find opportunities</b><p>Search skills, jobs and apprenticeships by state and city.</p></div></div>
+        <div class="mini"><div class="ic">🤝</div><div><b>Connect with people</b><p>Meet businesses, artisans, apprentices and job seekers.</p></div></div>
+        <div class="mini"><div class="ic">🚀</div><div><b>Grow your future</b><p>Showcase your skills, find work and build experience.</p></div></div>
+      </div>
+    </div>
+  </div></div>
+
+  <section class="wrap">
+    <div class="sec-head"><div><h2>Popular skills & trades</h2><p>Tap a category to see live jobs and apprenticeships near you.</p></div></div>
+    <div class="skills" id="skillGrid"></div>
+  </section>
+
+  <section class="wrap">
+    <div class="sec-head"><div><h2>Latest opportunities</h2><p>Fresh jobs, apprenticeships and handwork requests.</p></div>
+      <button class="btn ghost sm" onclick="go('browse')">View all →</button></div>
+    <div class="grid" id="latestGrid"></div>
+  </section>
+
+  <section class="wrap">
+    <div class="promo">
+      <div class="copy">
+        <span class="tag" style="border-color:rgba(255,255,255,.2);color:#c7cede;background:rgba(255,255,255,.06)">For businesses & artisans</span>
+        <h2>Hiring? Post a job free and meet apprentices ready to work.</h2>
+        <p>Reach thousands of job seekers across Nigeria. Review applications with photos and videos of real work, then hire with confidence.</p>
+        <div><button class="btn" onclick="go('post')">Post a job — it's free</button></div>
+      </div>
+      <div class="img" style="background:linear-gradient(135deg,#0d1420,#1c2942);display:grid;place-items:center;font-size:72px">🛠️</div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="panel" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px">
+      <div><h3>1. Create your profile</h3><p class="meta">Sign up as a job seeker or as a business. Add your photo, phone and skills.</p></div>
+      <div><h3>2. Search or post</h3><p class="meta">Filter by skill, state, city and experience — or post a job and receive applications.</p></div>
+      <div><h3>3. Apply with proof</h3><p class="meta">Attach photos, videos of past work, links and a message. Businesses review and respond.</p></div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= BROWSE ================= -->
+<main id="view-browse" class="hidden"><div class="wrap" style="padding:34px 0">
+  <div class="sec-head"><div><h2>Browse jobs & apprenticeships</h2><p>Filter across every trade, handwork job and skill.</p></div></div>
+  <div class="panel" style="margin-bottom:18px">
+    <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+      <div><label>Skill</label><input id="fSkill" list="skillList" placeholder="Any skill" /></div>
+      <div><label>State</label><select id="fState" onchange="populateCities('fState','fCity',true);renderBrowse()"></select></div>
+      <div><label>City / Area</label><select id="fCity" onchange="renderBrowse()"><option value="">All cities</option></select></div>
+      <div><label>Experience</label><select id="fExp"><option value="">Any</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
+      <div><label>Type</label><select id="fType"><option value="">All types</option><option>Apprenticeship</option><option>Handwork Job</option><option>Full-time Job</option><option>Part-time Job</option><option>Contract Gig</option></select></div>
+      <div style="display:flex;align-items:center;gap:8px;padding-top:20px"><input type="checkbox" id="fCreator" style="width:auto" onchange="renderBrowse()"/><label for="fCreator" style="margin:0;text-transform:none">Content creator opportunities</label></div>
+      <div style="display:flex;align-items:end;gap:8px"><button class="btn block" onclick="renderBrowse()">Apply filters</button></div>
+    </div>
+  </div>
+  <div class="grid" id="browseGrid"></div>
+</div></main>
+
+<!-- ================= NEARBY ================= -->
+<main id="view-nearby" class="hidden"><div class="wrap" style="padding:34px 0">
+  <div class="sec-head"><div><h2>Jobs & apprentices near me</h2><p>Allow location access to see jobs and workers around you, sorted by distance.</p></div></div>
+  <div class="mapbar">
+    <button class="btn" onclick="locateMe()">📍 Use my location</button>
+    <select id="nRadius" style="max-width:190px" onchange="renderNearby()">
+      <option value="10">Within 10 km</option><option value="25" selected>Within 25 km</option>
+      <option value="50">Within 50 km</option><option value="150">Within 150 km</option><option value="99999">Anywhere</option>
+    </select>
+    <select id="nState" style="max-width:220px" onchange="jumpState()"></select>
+  </div>
+  <div id="map"></div>
+  <h3 style="margin:24px 0 12px">Nearby requests <span id="nCount" class="meta"></span></h3>
+  <div class="grid" id="nearbyGrid"></div>
+</div></main>
+
+<!-- ================= POST ================= -->
+<main id="view-post" class="hidden"><div class="wrap" style="padding:34px 0">
+  <div class="sec-head"><div><h2>Post a job</h2><p>Businesses post apprenticeship/job openings. Job seekers can post an "available for work" listing.</p></div><button class="btn ghost sm" onclick="openGuideModal()">📘 Posting guide</button></div>
+  <div class="panel">
+    <div class="form-grid">
+      <div><label>Request type</label><select id="pType"><option>Apprenticeship</option><option>Handwork Job</option><option>Full-time Job</option><option>Part-time Job</option><option>Contract Gig</option><option>Available For Work</option></select></div>
+      <div><label>Skill / Trade</label><input id="pSkill" list="skillList" placeholder="Phone Repair" /></div>
+      <div class="full"><label>Title</label><input id="pTitle" placeholder="Phone Repair Apprentice Wanted" /></div>
+      <div><label>State</label><select id="pState" onchange="populateCities('pState','pCity')"></select></div>
+      <div><label>City / Area</label><select id="pCity"><option value="">Select city</option></select></div>
+      <div><label>Experience accepted</label><select id="pExp"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
+      <div><label>Slots / apprentices wanted</label><input id="pSlots" type="number" min="1" value="1" /></div>
+      <div><label>Duration</label><input id="pDuration" placeholder="6 months" /></div>
+      <div><label>Working hours</label><input id="pHours" placeholder="Mon–Sat, 8am – 5pm" /></div>
+      <div><label>Accommodation</label><select id="pAccom"><option>No</option><option>Yes</option></select></div>
+      <div><label>Meals</label><select id="pMeals"><option>No</option><option>Yes</option></select></div>
+      <div><label>Stipend / Pay (₦)</label><input id="pPay" placeholder="e.g. 20,000 monthly or None" /></div>
+      <div><label>Contact phone</label><input id="pPhone" placeholder="0803 000 0000" /></div>
+      <div><label>Website / Social link</label><input id="pLink" placeholder="https://instagram.com/yourshop" /></div>
+      <div class="full row" style="align-items:center;gap:10px;background:var(--surface-2);padding:13px 14px;border-radius:12px">
+        <input type="checkbox" id="pCreatorOpportunity" style="width:auto"/>
+        <label style="margin:0;text-transform:none;font-weight:600;color:var(--text);font-size:13.5px" for="pCreatorOpportunity">🎥 This is a content creator opportunity</label>
+      </div>
+      <div class="full row" style="align-items:center;gap:10px;background:var(--surface-2);padding:13px 14px;border-radius:12px">
+        <input type="checkbox" id="pHideContact" style="width:auto"/>
+        <label style="margin:0;text-transform:none;font-weight:600;color:var(--text);font-size:13.5px" for="pHideContact">Hide my phone number & link from public view — only visible to applicants I accept</label>
+      </div>
+      <div class="full"><label>Job description</label><textarea id="pDesc" rows="5" placeholder="What the apprentice will learn / do, tools provided, expectations..."></textarea></div>
+      <div class="full"><label>Requirements</label><textarea id="pReq" rows="3" placeholder="Must be 16+, willing to learn, resident in Lagos..."></textarea></div>
+      <div class="full"><label>Photos / videos of the shop or work</label>
+        <div class="upload" onclick="document.getElementById('pMedia').click()">📷 Click to upload images or videos</div>
+        <input type="file" id="pMedia" class="hidden" multiple accept="image/*,video/*" onchange="pickMedia(this,'pThumbs','listing')" />
+        <div class="thumbs" id="pThumbs"></div>
+      </div>
+      <div class="full"><button class="btn block" onclick="submitPost()">Publish request</button></div>
+    </div>
+  </div>
+</div></main>
+
+<!-- ================= AUTH ================= -->
+<main id="view-auth" class="hidden"><div class="wrap auth-wrap"><div class="auth panel">
+  <div class="switcher"><button id="tabLogin" class="on" onclick="authTab('login')">Log in</button><button id="tabSignup" onclick="authTab('signup')">Sign up</button></div>
+
+  <div id="loginBox">
+    <h2>Welcome back</h2><p class="meta" style="margin:6px 0 18px">Log in to apply, post jobs and manage your listings.</p>
+    <div class="form-grid">
+      <div class="full"><label>Email</label><input id="liEmail" type="email" placeholder="you@email.com" /></div>
+      <div class="full"><label>Password</label>
+        <div class="pw-wrap"><input id="liPass" type="password" placeholder="••••••••" />
+          <button type="button" class="pw-eye" onclick="togglePwVisibility('liPass',this)" title="Show password" aria-label="Show password">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button></div></div>
+      <div class="full"><button class="btn block" onclick="login()">Log in</button></div>
+    </div>
+  </div>
+
+  <div id="signupBox" class="hidden">
+    <div class="spread" style="align-items:end"><h2>Create your account</h2><button class="btn ghost sm" onclick="openSignupGuide()">📘 Signup guide</button></div>
+    <p class="meta" style="margin:6px 0 18px">All fields marked essential are required.</p>
+    <div class="form-grid">
+      <div class="full"><label>I am a…</label><select id="suRole">
+        <option value="apprentice">Apprentice / Job seeker</option>
+        <option value="business">Business owner / Artisan</option></select></div>
+      <div class="full" style="display:flex;gap:14px;align-items:center">
+        <img id="suAvatarPrev" class="avatar" style="width:64px;height:64px" src="https://api.dicebear.com/7.x/initials/svg?seed=SM" />
+        <div style="flex:1"><label>Profile picture (required)</label>
+          <div class="upload" onclick="document.getElementById('suAvatar').click()">Upload your photo</div>
+          <button type="button" id="suAvatarRemoveBtn" class="btn ghost sm hidden" style="margin-top:8px" onclick="removeAvatar()">✕ Remove photo</button>
+          <input type="file" id="suAvatar" class="hidden" accept="image/*" onchange="pickAvatar(this)" /></div>
+      </div>
+      <div><label>Full name</label><input id="suName" placeholder="Chinedu Okoro" /></div>
+      <div><label>Phone number</label><input id="suPhone" placeholder="0803 000 0000" /></div>
+      <div><label>Email</label><input id="suEmail" type="email" placeholder="you@email.com" /></div>
+      <div><label>Password</label>
+        <div class="pw-wrap"><input id="suPass" type="password" placeholder="Min. 6 characters" />
+          <button type="button" class="pw-eye" onclick="togglePwVisibility('suPass',this)" title="Show password" aria-label="Show password">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button></div></div>
+      <div><label>State</label><select id="suState" onchange="populateCities('suState','suCity')"></select></div>
+      <div><label>City / Area</label><select id="suCity"><option value="">Select city</option></select></div>
+      <div><label>Gender</label><select id="suGender"><option>Prefer not to say</option><option>Male</option><option>Female</option></select></div>
+      <div><label>Date of birth</label><input id="suDob" type="date" /></div>
+      <div><label>Main skill / trade</label><input id="suSkill" list="skillList" placeholder="Phone Repair" /></div>
+      <div><label>Experience level</label><select id="suExp"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
+      <div class="full row" style="align-items:center;gap:10px;background:var(--surface-2);padding:13px 14px;border-radius:12px">
+        <input type="checkbox" id="suCreator" style="width:auto"/>
+        <label style="margin:0;text-transform:none;font-weight:600;color:var(--text);font-size:13.5px" for="suCreator">🎥 I am a content creator / influencer</label>
+      </div>
+      <div id="creatorOnly" class="full form-grid hidden" style="padding:0">
+        <div><label>Platforms</label><input id="suCreatorPlatforms" placeholder="TikTok, Instagram, YouTube" /></div>
+        <div><label>Followers / audience size</label><input id="suCreatorFollowers" type="number" min="0" placeholder="e.g. 25000" /></div>
+      </div>
+      <div id="bizOnly" class="full form-grid hidden" style="padding:0">
+        <div><label>Business name</label><input id="suBiz" placeholder="Chinedu Gadgets" /></div>
+        <div><label>Years in business</label><input id="suYears" type="number" min="0" placeholder="5" /></div>
+        <div class="full"><label>Business address</label><input id="suAddr" placeholder="12 Awolowo Rd, Ikeja" /></div>
+      </div>
+      <div class="full"><label>Short bio / about you</label><textarea id="suBio" rows="3" placeholder="Tell businesses about yourself..."></textarea></div>
+      <div class="full"><label>Link (portfolio, Instagram, WhatsApp)</label><input id="suLink" placeholder="https://" /></div>
+      <div class="full"><label>Referral code (optional)</label><input id="suRefCode" placeholder="e.g. SMAB12C — from a friend's referral link" style="text-transform:uppercase"/></div>
+      <div class="full"><button class="btn block" onclick="signup()">Create account</button></div>
+    </div>
+  </div>
+</div></div></main>
+
+<!-- ================= DASHBOARD ================= -->
+<main id="view-dashboard" class="hidden"><div class="wrap" style="padding:34px 0" id="dashBody"></div></main>
+
+<!-- ================= SETTINGS ================= -->
+<main id="view-settings" class="hidden"><div class="wrap" style="padding:34px 0" id="settingsBody"></div></main>
+
+<!-- ================= PROFILE ================= -->
+<main id="view-profile" class="hidden"><div class="wrap" style="padding:34px 0" id="profileBody"></div></main>
+
+<!-- ================= SOCIAL / CONNECT ================= -->
+<main id="view-social" class="hidden">
+  <div class="social-shell">
+    <div class="social-top">
+      <div class="social-brand"><button class="social-back" onclick="exitSocial()" title="Back to Skill Mate">← Back</button></div>
+    </div>
+    <section id="socialVideos" class="hidden"></section>
+    <section id="socialProfile" class="hidden"></section>
+    <section id="socialUpdates" class="hidden"></section>
+  </div>
+</main>
+
+<datalist id="skillList"></datalist>
+<div id="modalRoot"></div>
+
+<!-- ================= CUSTOMER SERVICE CHAT ================= -->
+<div id="chatWidget">
+  <button id="chatToggle" onclick="toggleChat()" title="Chat with support">💬<span id="chatBadge" class="chat-badge hidden">0</span></button>
+  <div id="chatPanel" class="hidden">
+    <div class="chat-head"><b>Skill Mate Support</b><button class="chat-close" onclick="toggleChat()">✕</button></div>
+    <div id="chatBody" class="chat-body"></div>
+    <div class="chat-input">
+      <input id="chatInput" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendChatMsg()"/>
+      <button class="btn sm" onclick="sendChatMsg()">Send</button>
+    </div>
+  </div>
+</div>
+
+<footer><div class="wrap spread" style="flex-wrap:wrap;gap:10px">
+  <div>© <span id="yr"></span> Skill Mate 🇳🇬 — Find Jobs &amp; Apprentices Near You.</div>
+  <div class="row"><span class="meta">Free for job seekers, always.</span></div>
+</div></footer>
+
+<nav class="bottomnav" id="bottomNav">
+  <div id="mainBottomNav" style="display:flex;gap:2px;align-items:stretch;width:100%">
+    <a class="bn-item active" data-view="home" onclick="go('home')" title="Home"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg><span>Home</span></a>
+    <a class="bn-item" data-view="social" onclick="go('social')" title="Social"><svg viewBox="0 0 24 24"><path d="M8 4h8a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-4l-4 4v-4H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Z"/><path d="M8 9h8M8 12h5"/></svg><span>Social</span></a>
+    <a class="bn-item" data-view="nearby" onclick="go('nearby')" title="Near me"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.6 7-11.5A7 7 0 0 0 5 9.5C5 14.4 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.4"/></svg><span>Near Me</span></a>
+    <a class="bn-item" data-view="chat" onclick="openMessages()" title="Messages" style="position:relative"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg><span>Chat</span><span id="navChatBadge" class="chat-badge hidden">0</span></a>
+    <a class="bn-item bn-cta" data-view="post" onclick="go('post')" title="Post a job"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span>Post</span></a>
+    <a class="bn-item" data-view="dashboard" onclick="go('dashboard')" title="Dashboard"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>Dashboard</span></a>
+  </div>
+  <div id="socialBottomNav" class="social-nav" style="display:none;width:100%;justify-content:space-between">
+    <a class="bn-item" data-social-nav="profile" onclick="socialGo('profile')" title="Profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>Profile</span></a>
+    <a class="bn-item active" data-social-nav="videos" onclick="socialGo('videos')" title="Videos"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m10 8 6 4-6 4Z" fill="currentColor" stroke="none"/></svg><span>Videos</span></a>
+    <a class="bn-item" data-social-nav="updates" onclick="socialGo('updates')" title="Updates"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span>Updates</span></a>
+    <a class="bn-item" data-social-nav="chat" onclick="openMessages()" title="Chat"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg><span>Chat</span><span id="socialNavChatBadge" class="chat-badge hidden">0</span></a>
+  </div>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
+<script>
+/* Skill Mate — configuration. Keep credentials in config.js, not in this page. */
+window.SKILLMATE_CONFIG = Object.assign({
+  SUPABASE_URL: "",
+  SUPABASE_ANON_KEY: "",
+  SUPABASE_STORAGE_URL: "",
+  MEDIA_API: "https://admin-back22.onrender.com",
+  BACKEND_API: "https://admin-back22.onrender.com",
+  DEMO_FALLBACK: true
+}, window.SKILLMATE_CONFIG || {});
+</script>
+<script>
+/* ================= Skill Mate — app logic ================= */
+const CFG = window.SKILLMATE_CONFIG || {};
+const SB = (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY && window.supabase)
+  ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
+const MEDIA_API = (CFG.MEDIA_API || "").replace(/\/$/, "");
+
+const STATES = {
+  "Abia":[5.532,7.486],"Adamawa":[9.328,12.398],"Akwa Ibom":[5.008,7.851],"Anambra":[6.221,6.937],
+  "Bauchi":[10.314,9.846],"Bayelsa":[4.771,6.070],"Benue":[7.336,8.740],"Borno":[11.833,13.151],
+  "Cross River":[4.958,8.327],"Delta":[5.888,5.678],"Ebonyi":[6.324,8.113],"Edo":[6.335,5.603],
+  "Ekiti":[7.719,5.311],"Enugu":[6.459,7.548],"FCT - Abuja":[9.058,7.494],"Gombe":[10.290,11.167],
+  "Imo":[5.572,7.058],"Jigawa":[12.228,9.561],"Kaduna":[10.523,7.440],"Kano":[12.002,8.592],
+  "Katsina":[12.988,7.617],"Kebbi":[12.454,4.199],"Kogi":[7.797,6.740],"Kwara":[8.497,4.542],
+  "Lagos":[6.5244,3.3792],"Nasarawa":[8.540,8.318],"Niger":[9.930,5.598],"Ogun":[7.160,3.348],
+  "Ondo":[7.250,5.195],"Osun":[7.756,4.556],"Oyo":[7.377,3.947],"Plateau":[9.897,8.858],
+  "Rivers":[4.815,7.049],"Sokoto":[13.005,5.247],"Taraba":[8.888,11.360],"Yobe":[11.748,11.966],
+  "Zamfara":[12.169,6.659]
+};
+
+const STATE_CITIES = {
+  "Abia":["Aba North", "Aba South", "Arochukwu", "Bende", "Ikwuano", "Isiala Ngwa North", "Isiala Ngwa South", "Isuikwuato", "Obingwa", "Ohafia", "Osisioma", "Ugwunagbo", "Ukwa East", "Ukwa West", "Umuahia North", "Umuahia South", "Umu Nneochi"],
+  "Adamawa":["Demsa", "Fufore", "Ganye", "Girei", "Gombi", "Guyuk", "Hong", "Jada", "Lamurde", "Madagali", "Maiha", "Mayo-Belwa", "Michika", "Mubi North", "Mubi South", "Numan", "Shelleng", "Song", "Toungo", "Yola North", "Yola South"],
+  "Akwa Ibom":["Abak", "Eastern Obolo", "Eket", "Esit Eket", "Essien Udim", "Etim Ekpo", "Etinan", "Ibeno", "Ibesikpo Asutan", "Ibiono Ibom", "Ika", "Ikono", "Ikot Abasi", "Ikot Ekpene", "Ini", "Itu", "Mbo", "Mkpat-Enin", "Nsit-Atai", "Nsit-Ibom", "Nsit-Ubium", "Obot Akara", "Okobo", "Onna", "Oron", "Oruk Anam", "Udung-Uko", "Ukanafun", "Uruan", "Urue-Offong/Oruko", "Uyo"],
+  "Anambra":["Aguata", "Awka North", "Awka South", "Anambra East", "Anambra West", "Anaocha", "Ayamelum", "Dunukofia", "Ekwusigo", "Idemili North", "Idemili South", "Ihiala", "Njikoka", "Nnewi North", "Nnewi South", "Ogbaru", "Onitsha North", "Onitsha South", "Orumba North", "Orumba South", "Oyi"],
+  "Bauchi":["Alkaleri", "Bauchi", "Bogoro", "Damban", "Darazo", "Dass", "Gamawa", "Ganjuwa", "Giade", "Itas/Gadau", "Jama’are", "Katagum", "Kirfi", "Misau", "Ningi", "Shira", "Tafawa Balewa", "Toro", "Warji", "Zaki"],
+  "Bayelsa":["Brass", "Ekeremor", "Kolokuma/Opokuma", "Nembe", "Ogbia", "Sagbama", "Southern Ijaw", "Yenagoa"],
+  "Benue":["Ado", "Agatu", "Apa", "Buruku", "Gboko", "Guma", "Gwer East", "Gwer West", "Katsina-Ala", "Konshisha", "Kwande", "Logo", "Makurdi", "Obi", "Ogbadibo", "Ohimini", "Oju", "Okpokwu", "Otukpo", "Tarka", "Ukum", "Ushongo", "Vandeikya"],
+  "Borno":["Abadam", "Askira/Uba", "Bama", "Bayo", "Biu", "Chibok", "Damboa", "Dikwa", "Gubio", "Guzamala", "Gwoza", "Hawul", "Jere", "Kaga", "Kala/Balge", "Konduga", "Kukawa", "Kwaya Kusar", "Mafa", "Magumeri", "Maiduguri", "Marte", "Mobbar", "Monguno", "Ngala", "Nganzai", "Shani"],
+  "Cross River":["Abi", "Akamkpa", "Akpabuyo", "Bakassi", "Bekwarra", "Biase", "Boki", "Calabar Municipal", "Calabar South", "Etung", "Ikom", "Obanliku", "Obubra", "Obudu", "Odukpani", "Ogoja", "Yakurr", "Yala"],
+  "Delta":["Aniocha North", "Aniocha South", "Bomadi", "Burutu", "Ethiope East", "Ethiope West", "Ika North East", "Ika South", "Isoko North", "Isoko South", "Ndokwa East", "Ndokwa West", "Okpe", "Oshimili North", "Oshimili South", "Patani", "Sapele", "Udu", "Ughelli North", "Ughelli South", "Ukwuani", "Uvwie", "Warri North", "Warri South", "Warri South West"],
+  "Ebonyi":["Abakaliki", "Afikpo North", "Afikpo South", "Ebonyi", "Ezza North", "Ezza South", "Ikwo", "Ishielu", "Ivo", "Izzi", "Ohaozara", "Ohaukwu", "Onicha"],
+  "Edo":["Akoko-Edo", "Egor", "Esan Central", "Esan North-East", "Esan South-East", "Esan West", "Etsako Central", "Etsako East", "Etsako West", "Igueben", "Ikpoba-Okha", "Oredo", "Orhionmwon", "Ovia North-East", "Ovia South-West", "Owan East", "Owan West", "Uhunmwonde"],
+  "Ekiti":["Ado-Ekiti", "Efon", "Ekiti East", "Ekiti South-West", "Ekiti West", "Emure", "Gbonyin", "Ido-Osi", "Ijero", "Ikere", "Ikole", "Ilejemeje", "Irepodun/Ifelodun", "Ise/Orun", "Moba", "Oye"],
+  "Enugu":["Aninri", "Awgu", "Enugu East", "Enugu North", "Enugu South", "Ezeagu", "Igbo-Etiti", "Igbo-Eze North", "Igbo-Eze South", "Isi-Uzo", "Nkanu East", "Nkanu West", "Nsukka", "Oji River", "Udenu", "Udi", "Uzo-Uwani"],
+  "Gombe":["Akko", "Balanga", "Billiri", "Dukku", "Funakaye", "Gombe", "Kaltungo", "Kwami", "Nafada", "Shongom", "Yamaltu/Deba"],
+  "Imo":["Aboh Mbaise", "Ahiazu Mbaise", "Ehime Mbano", "Ezinihitte", "Ideato North", "Ideato South", "Ihitte/Uboma", "Ikeduru", "Isiala Mbano", "Isu", "Mbaitoli", "Ngor-Okpala", "Njaba", "Nkwerre", "Nwangele", "Obowo", "Oguta", "Ohaji/Egbema", "Okigwe", "Onuimo", "Orlu", "Orsu", "Oru East", "Oru West", "Owerri Municipal", "Owerri North", "Owerri West"],
+  "Jigawa":["Auyo", "Babura", "Biriniwa", "Birnin Kudu", "Buji", "Dutse", "Gagarawa", "Garki", "Gumel", "Guri", "Gwaram", "Gwiwa", "Hadejia", "Jahun", "Kafin Hausa", "Kaugama", "Kazaure", "Kiri Kasama", "Kiyawa", "Maigatari", "Malam Madori", "Miga", "Ringim", "Roni", "Sule Tankarkar", "Taura", "Yankwashi"],
+  "Kaduna":["Birnin Gwari", "Chikun", "Giwa", "Igabi", "Ikara", "Jaba", "Jema’a", "Kachia", "Kaduna North", "Kaduna South", "Kagarko", "Kajuru", "Kaura", "Kauru", "Kubau", "Kudan", "Lere", "Makarfi", "Sabon Gari", "Sanga", "Soba", "Zangon Kataf", "Zaria"],
+  "Kano":["Ajingi", "Albasu", "Bagwai", "Bebeji", "Bichi", "Bunkure", "Dala", "Danbatta", "Dawakin Kudu", "Dawakin Tofa", "Doguwa", "Fagge", "Gabasawa", "Garko", "Garun Mallam", "Gaya", "Gezawa", "Gwale", "Gwarzo", "Kabo", "Kano Municipal", "Karaye", "Kibiya", "Kiru", "Kumbotso", "Kunchi", "Kura", "Madobi", "Makoda", "Minjibir", "Nasarawa", "Rano", "Rimin Gado", "Rogo", "Shanono", "Sumaila", "Takai", "Tarauni", "Tofa", "Tsanyawa", "Tudun Wada", "Ungogo", "Warawa", "Wudil"],
+  "Katsina":["Bakori", "Batagarawa", "Batsari", "Baure", "Bindawa", "Charanchi", "Dandume", "Danja", "Dan Musa", "Daura", "Dutsi", "Dutsin-Ma", "Faskari", "Funtua", "Ingawa", "Jibia", "Kafur", "Kaita", "Kankara", "Kankia", "Katsina", "Kurfi", "Kusada", "Mai’Adua", "Malumfashi", "Mani", "Mashi", "Matazu", "Musawa", "Rimi", "Sabuwa", "Safana", "Sandamu", "Zango"],
+  "Kebbi":["Aleiro", "Arewa-Dandi", "Argungu", "Augie", "Bagudo", "Birnin Kebbi", "Bunza", "Dandi", "Fakai", "Gwandu", "Jega", "Kalgo", "Koko/Besse", "Maiyama", "Ngaski", "Sakaba", "Shanga", "Suru", "Wasagu/Danko", "Yauri", "Zuru"],
+  "Kogi":["Adavi", "Ajaokuta", "Ankpa", "Bassa", "Dekina", "Ibaji", "Idah", "Igalamela-Odolu", "Ijumu", "Kabba-Bunu", "Kogi", "Lokoja", "Mopa-Muro", "Ofu", "Ogori-Magongo", "Okehi", "Okene", "Olamaboro", "Omala", "Yagba East", "Yagba West"],
+  "Kwara":["Asa", "Baruten", "Edu", "Ekiti", "Ifelodun", "Ilorin East", "Ilorin South", "Ilorin West", "Irepodun", "Isin", "Kaiama", "Moro", "Offa", "Oke-Ero", "Oyun", "Patigi"],
+  "Lagos":["Agege", "Ajeromi-Ifelodun", "Alimosho", "Amuwo-Odofin", "Apapa", "Badagry", "Epe", "Eti-Osa", "Ibeju-Lekki", "Ifako-Ijaiye", "Ikeja", "Ikorodu", "Kosofe", "Lagos Island", "Lagos Mainland", "Mushin", "Ojo", "Oshodi-Isolo", "Shomolu", "Surulere"],
+  "Nasarawa":["Akwanga", "Awe", "Doma", "Karu", "Keana", "Keffi", "Kokona", "Lafia", "Nasarawa", "Nasarawa-Eggon", "Obi", "Toto", "Wamba"],
+  "Niger":["Agaie", "Agwara", "Bida", "Borgu", "Bosso", "Chanchaga", "Edati", "Gbako", "Gurara", "Katcha", "Kontagora", "Lapai", "Lavun", "Magama", "Mariga", "Mashegu", "Mokwa", "Munya", "Paikoro", "Rafi", "Rijau", "Shiroro", "Suleja", "Tafa", "Wushishi"],
+  "Ogun":["Abeokuta North", "Abeokuta South", "Ado-Odo/Ota", "Egbado North", "Egbado South", "Ewekoro", "Ifo", "Ijebu East", "Ijebu North", "Ijebu North-East", "Ijebu-Ode", "Ikenne", "Imeko-Afon", "Ipokia", "Obafemi-Owode", "Odeda", "Odogbolu", "Ogun Waterside", "Remo North", "Sagamu"],
+  "Ondo":["Akoko North-East", "Akoko North-West", "Akoko South-East", "Akoko South-West", "Akure North", "Akure South", "Ese Odo", "Idanre", "Ifedore", "Ilaje", "Ile-Oluji/Okeigbo", "Irele", "Odigbo", "Okitipupa", "Ondo East", "Ondo West", "Ose", "Owo"],
+  "Osun":["Atakunmosa East", "Atakunmosa West", "Aiyedaade", "Aiyedire", "Boluwaduro", "Boripe", "Ede North", "Ede South", "Egbedore", "Ejigbo", "Ife Central", "Ife East", "Ife North", "Ife South", "Ifedayo", "Ifelodun", "Ila", "Ilesa East", "Ilesa West", "Irepodun", "Irewole", "Isokan", "Iwo", "Obokun", "Odo Otin", "Olorunda", "Oriade", "Orolu", "Osogbo"],
+  "Oyo":["Afijio", "Akinyele", "Atiba", "Atisbo", "Egbeda", "Ibadan North", "Ibadan North-East", "Ibadan North-West", "Ibadan South-East", "Ibadan South-West", "Ibarapa Central", "Ibarapa East", "Ibarapa North", "Ido", "Ifelodun", "Irepo", "Iseyin", "Itesiwaju", "Iwajowa", "Kajola", "Lagelu", "Ogbomoso North", "Ogbomoso South", "Ogo Oluwa", "Olorunsogo", "Oluyole", "Ona-Ara", "Orelope", "Ori Ire", "Oyo East", "Oyo West", "Saki East", "Saki West", "Surulere"],
+  "Plateau":["Barkin Ladi", "Bassa", "Bokkos", "Jos East", "Jos North", "Jos South", "Kanam", "Kanke", "Langtang North", "Langtang South", "Mangu", "Mikang", "Pankshin", "Qua’an Pan", "Riyom", "Shendam", "Wase"],
+  "Rivers":["Abua-Odual", "Ahoada East", "Ahoada West", "Akuku-Toru", "Andoni", "Asari-Toru", "Bonny", "Degema", "Eleme", "Emohua", "Etche", "Gokana", "Ikwerre", "Khana", "Obio/Akpor", "Ogba/Egbema/Ndoni", "Ogu/Bolo", "Okrika", "Omuma", "Opobo/Nkoro", "Oyigbo", "Port Harcourt", "Tai"],
+  "Sokoto":["Binji", "Bodinga", "Dange-Shuni", "Gada", "Goronyo", "Gudu", "Gwadabawa", "Illela", "Isa", "Kebbe", "Kware", "Rabah", "Sabon Birni", "Shagari", "Silame", "Sokoto North", "Sokoto South", "Tambuwal", "Tangaza", "Tureta", "Wamakko", "Wurno", "Yabo"],
+  "Taraba":["Ardo Kola", "Bali", "Donga", "Gashaka", "Gassol", "Ibi", "Jalingo", "Karim Lamido", "Kurmi", "Lau", "Sardauna", "Takum", "Ussa", "Wukari", "Yorro", "Zing"],
+  "Yobe":["Bade", "Bursari", "Damaturu", "Fika", "Fune", "Geidam", "Gulani", "Gujba", "Jakusko", "Karasuwa", "Machina", "Nangere", "Nguru", "Potiskum", "Tarmuwa", "Yunusari", "Yusufari"],
+  "Zamfara":["Anka", "Bakura", "Birnin Magaji", "Bukkuyum", "Bungudu", "Gummi", "Gusau", "Kaura-Namoda", "Maradun", "Maru", "Shinkafi", "Talata Mafara", "Tsafe", "Zurmi"],
+  "FCT - Abuja":["Abaji", "Bwari", "Gwagwalada", "Kuje", "Kwali", "Municipal (Abuja)"]
+};
+// Fills a <select id=citySelectId> with the cities for whatever state is
+// currently chosen in <select id=stateSelectId>. Keeps the previous value
+// selected if it still exists in the new list (useful when re-rendering).
+function populateCities(stateSelectId, citySelectId, allowAll){
+  const stateEl=$(stateSelectId), cityEl=$(citySelectId); if(!stateEl||!cityEl) return;
+  const prev=cityEl.value;
+  const cities=STATE_CITIES[stateEl.value]||[];
+  const opts=(allowAll?[`<option value="">All cities</option>`]:[`<option value="">Select city / LGA</option>`])
+    .concat(cities.map(c=>`<option value="${esc(c)}"${c===prev?" selected":""}>${esc(c)}</option>`))
+    .concat([`<option value="__custom__">✏️ Type my own city / area</option>`]);
+  cityEl.innerHTML=opts.join("");
+  cityEl.onchange=function(){ if(this.value==="__custom__"){ const v=prompt("Type your city / area / LGA"); if(v&&v.trim()){ let o=[...this.options].find(x=>x.value===v.trim()); if(!o){o=document.createElement("option");o.value=v.trim();o.textContent=v.trim();this.insertBefore(o,this.lastElementChild);} this.value=v.trim(); } else this.value=prev||""; if(typeof renderBrowse==="function") renderBrowse(); }};
+}
+
+const SKILLS = [
+  {n:"Hairdressing",e:"💇",g:"Beauty"},{n:"Barbering",e:"💈",g:"Beauty"},{n:"Make-up Artistry",e:"💄",g:"Beauty"},
+  {n:"Nail Technology",e:"💅",g:"Beauty"},{n:"Phone Repair",e:"📱",g:"Tech"},{n:"Web Development",e:"💻",g:"Tech"},
+  {n:"Software Development",e:"👨‍💻",g:"Tech"},{n:"Graphics Design",e:"🎨",g:"Tech"},{n:"UI/UX Design",e:"🖼️",g:"Tech"},
+  {n:"Computer Training",e:"🖥️",g:"Tech"},{n:"Solar Installation",e:"🔆",g:"Tech"},
+  {n:"Social Media Management",e:"📲",g:"Digital"},{n:"Content Creation",e:"🎥",g:"Digital"},
+  {n:"Digital Marketing",e:"📈",g:"Digital"},{n:"Video Editing",e:"🎞️",g:"Digital"},
+  {n:"Auto Mechanic",e:"🔧",g:"Handwork"},{n:"Panel Beating",e:"🚗",g:"Handwork"},{n:"Electrical Work",e:"⚡",g:"Handwork"},
+  {n:"Plumbing",e:"🚿",g:"Handwork"},{n:"Welding & Fabrication",e:"🛠️",g:"Handwork"},{n:"Carpentry",e:"🪚",g:"Handwork"},
+  {n:"Painting",e:"🖌️",g:"Handwork"},{n:"Tiling",e:"🧱",g:"Handwork"},{n:"POP & Ceiling",e:"🏠",g:"Handwork"},
+  {n:"Aluminium Works",e:"🪟",g:"Handwork"},{n:"Generator Repair",e:"🔌",g:"Handwork"},
+  {n:"AC & Fridge Repair",e:"❄️",g:"Handwork"},{n:"Fashion Design",e:"👗",g:"Fashion"},{n:"Tailoring",e:"🧵",g:"Fashion"},
+  {n:"Shoe Making",e:"👟",g:"Fashion"},{n:"Bag Making",e:"👜",g:"Fashion"},{n:"Catering",e:"🍳",g:"Food"},
+  {n:"Baking & Pastry",e:"🎂",g:"Food"},{n:"Bar & Restaurant",e:"🍽️",g:"Food"},{n:"Photography",e:"📸",g:"Creative"},
+  {n:"Videography",e:"🎬",g:"Creative"},{n:"Music Production",e:"🎧",g:"Creative"},{n:"Event Planning",e:"🎉",g:"Creative"},
+  {n:"Furniture Making",e:"🪑",g:"Handwork"},{n:"Building & Masonry",e:"🏗️",g:"Handwork"},
+  {n:"Poultry & Farming",e:"🐔",g:"Agric"},{n:"Fish Farming",e:"🐟",g:"Agric"},{n:"Driving",e:"🚙",g:"Logistics"},
+  {n:"Dispatch Rider",e:"🏍️",g:"Logistics"},{n:"Sales & Retail",e:"🛒",g:"Business"},
+  {n:"Business / Company Owner",e:"🏢",g:"Business"},{n:"Tutoring",e:"📚",g:"Education"},
+  {n:"Nursing Aide",e:"🩺",g:"Health"},{n:"Laundry & Dry Cleaning",e:"🧺",g:"Services"},
+  {n:"Cleaning Services",e:"🧹",g:"Services"},{n:"Security",e:"🛡️",g:"Services"}
+];
+
+/* ---------- local store / offline fallback ---------- */
+const LS = {
+  get:(k,d)=>{try{return JSON.parse(localStorage.getItem("sm_"+k))??d}catch(e){return d}},
+  set:(k,v)=>{
+    try{ localStorage.setItem("sm_"+k,JSON.stringify(v)); return true; }
+    catch(e){
+      console.warn("localStorage quota exceeded while saving '"+k+"'", e);
+      if(typeof toast==="function") toast("⚠️ Device storage is full. Your data may not be saved.");
+      return false;
+    }
+  }
+};
+let DB = {
+  users: LS.get("users",[]),
+  requests: LS.get("requests",[]),
+  applications: LS.get("applications",[]),
+  saved: LS.get("saved",[]),
+  reports: LS.get("reports",[]),
+  reviews: LS.get("reviews",[]),
+  verification_requests: LS.get("verification_requests",[]),
+  featured_requests: LS.get("featured_requests",[]),
+  messages: LS.get("messages",[]),
+  referrals: LS.get("referrals",[]),
+  withdrawals: LS.get("withdrawals",[]),
+  announcements: LS.get("announcements",[]),
+  demo_requests: LS.get("demo_requests",[]),
+  social_videos: LS.get("social_videos",[]), social_updates: LS.get("social_updates",[]), social_follows: LS.get("social_follows",[]), social_likes: LS.get("social_likes",[]), social_saves: LS.get("social_saves",[]), social_comments: LS.get("social_comments",[])
+};
+const save = ()=>{Object.keys(DB).forEach(k=>LS.set(k,DB[k]))};
+let ME = LS.get("me",null);
+
+/* ---------- helpers ---------- */
+const $ = id=>document.getElementById(id);
+const uid = ()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+const esc = s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
+function skillEmoji(n){const s=SKILLS.find(s=>s.n.toLowerCase()===String(n||"").toLowerCase());return s?s.e:"🧰"}
+function strHash(s){let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0}return Math.abs(h)}
+function km(a,b,c,d){const R=6371,p=Math.PI/180;const x=(c-a)*p,y=(d-b)*p;
+  const h=Math.sin(x/2)**2+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+function timeAgo(t){const s=(Date.now()-new Date(t))/1000;if(s<3600)return Math.max(1,~~(s/60))+"m ago";
+  if(s<86400)return ~~(s/3600)+"h ago";return ~~(s/86400)+"d ago"}
+
+/* ---------- form validation (catches typos before they get submitted) ---------- */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+function isValidEmail(e){ return EMAIL_RE.test(String(e||"").trim()); }
+// Accepts 080..., 070..., 090..., 081... (11 digits starting with 0) or
+// +234 followed by 10 digits — rejects anything too short/long or with letters.
+function normalizePhone(p){ return String(p||"").replace(/[\s-]/g,""); }
+function isValidPhone(p){
+  const v=normalizePhone(p);
+  return /^0\d{10}$/.test(v) || /^\+234\d{10}$/.test(v);
+}
+
+/* ---------- media upload ---------- */
+async function fileToDataURL(f){return new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)})}
+// Resizes/re-encodes an image before it ever reaches localStorage or the wire —
+// this is what actually prevents the "exceeded the quota" crash, since a single
+// uncompressed phone photo can be several MB and a signup requires one every time.
+function compressImage(file,maxDim,quality){
+  return new Promise((resolve)=>{
+    if(!file.type||!file.type.startsWith("image")){ fileToDataURL(file).then(resolve); return; }
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        let {width,height}=img;
+        if(width>maxDim||height>maxDim){ const s=maxDim/Math.max(width,height); width=Math.round(width*s); height=Math.round(height*s); }
+        const canvas=document.createElement("canvas"); canvas.width=width; canvas.height=height;
+        canvas.getContext("2d").drawImage(img,0,0,width,height);
+        try{ resolve(canvas.toDataURL("image/jpeg",quality)); }
+        catch(e){ resolve(reader.result); }
+      };
+      img.onerror=()=>resolve(reader.result);
+      img.src=reader.result;
+    };
+    reader.onerror=()=>resolve(null);
+    reader.readAsDataURL(file);
+  });
+}
+async function uploadMedia(file,category){
+  const isVideo = file.type && file.type.startsWith("video");
+  if(isVideo && !MEDIA_API && file.size>8*1024*1024){
+    toast("Video too large for this device —  to upload video.");
+    return {url:"",type:file.type,id:uid()};
+  }
+  const compact = isVideo ? await fileToDataURL(file) : await compressImage(file,1000,0.72);
+  if(MEDIA_API){
+    try{
+      const res = await fetch(MEDIA_API+"/api/media",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({filename:file.name,mime:file.type,data:compact,owner:ME?ME.id:"guest",category:category||"other"})});
+      if(res.ok){const j=await res.json();const absUrl=j.url&&j.url.startsWith("http")?j.url:MEDIA_API+j.url;return {url:absUrl,type:file.type,id:j.id}}
+    }catch(e){console.warn("media server unavailable, using local copy",e)}
+  }
+  return {url:compact,type:file.type,id:uid()};
+}
+let PENDING = {media:[],avatar:null};
+let PENDING_SIGNUP = null;
+function renderThumbs(thumbId){
+  const box=$(thumbId); if(!box) return;
+  box.innerHTML = PENDING.media.map(m=>`
+    <div class="thumb-wrap" data-id="${m.id}">
+      ${m.type.startsWith("video") ? `<video src="${esc(m.url)}" muted loop playsinline></video>` : `<img src="${esc(m.url)}"/>`}
+      <button type="button" class="thumb-remove" onclick="removeMedia('${m.id}','${thumbId}')" title="Remove this upload">✕</button>
+    </div>`).join("");
+  box.querySelectorAll("video").forEach(v=>v.play().catch(()=>{}));
+}
+function removeMedia(id,thumbId){
+  PENDING.media = PENDING.media.filter(m=>m.id!==id);
+  renderThumbs(thumbId);
+  toast("Upload removed");
+}
+async function pickMedia(input,thumbId,category){
+  for(const f of input.files){
+    toast("Uploading "+f.name+"…");
+    const m=await uploadMedia(f,category); PENDING.media.push(m);
+    renderThumbs(thumbId);
+  }
+  input.value="";
+}
+async function pickAvatar(input){
+  const f=input.files[0]; if(!f)return;
+  toast("Uploading photo…");
+  const m=await uploadMedia(f,'profile'); PENDING.avatar=m.url; $("suAvatarPrev").src=m.url;
+  const rm=$("suAvatarRemoveBtn"); if(rm) rm.classList.remove("hidden");
+}
+function removeAvatar(){
+  PENDING.avatar=null;
+  $("suAvatarPrev").src="https://api.dicebear.com/7.x/initials/svg?seed=SM";
+  const rm=$("suAvatarRemoveBtn"); if(rm) rm.classList.add("hidden");
+  const input=$("suAvatar"); if(input) input.value="";
+  toast("Photo removed");
+}
+function togglePwVisibility(inputId,btn){
+  const input=$(inputId); if(!input) return;
+  const showing=input.type==="text";
+  input.type=showing?"password":"text";
+  btn.title=showing?"Show password":"Hide password";
+  btn.setAttribute("aria-label",btn.title);
+  btn.innerHTML=showing
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a19.9 19.9 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a19.9 19.9 0 0 1-3.2 4.44M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>`;
+}
+
+/* ---------- Supabase-or-local data layer ---------- */
+async function apiCreateUser(u){
+  if(SB){ const {error}=await SB.from("profiles").insert(u); if(error) throw error; }
+  DB.users.push(u); save(); return u;
+}
+async function apiUpdateUser(id,patch){
+  if(SB){ const {error}=await SB.from("profiles").update(patch).eq("id",id); if(error) throw error; }
+  const u=DB.users.find(x=>x.id===id); if(u) Object.assign(u,patch);
+  if(ME && ME.id===id){ Object.assign(ME,patch); LS.set("me",ME); }
+  save();
+}
+async function apiLoadAll(){
+  if(SB){
+    const results = await Promise.all([
+      SB.from("requests").select("*").order("created_at",{ascending:false}),
+      SB.from("profiles").select("*"),
+      SB.from("saved").select("*"),
+      SB.from("applications").select("*"),
+      SB.from("reviews").select("*"),
+      SB.from("verification_requests").select("*"),
+      SB.from("featured_requests").select("*"),
+      SB.from("messages").select("*").order("created_at",{ascending:true}),
+      SB.from("referrals").select("*"),
+      SB.from("withdrawals").select("*"),
+      SB.from("activity_log").select("*").order("created_at",{ascending:false}),
+      SB.from("announcements").select("*").order("created_at",{ascending:false}),
+      SB.from("demo_requests").select("*").order("created_at",{ascending:false})
+    ]);
+    // demo_requests is optional (older databases may not have it yet) — don't let
+    // a missing table break the whole app load, just skip it silently.
+    const critical = results.slice(0,12);
+    const failed = critical.find(result=>result.error);
+    if(failed) throw failed.error;
+    const [rq,us,sv,ap,rv,vr,fr,ms,rf,wd,al,an,dr] = results.map(result=>result.data || []);
+    DB.requests=rq; DB.users=us; DB.saved=sv; DB.applications=ap; DB.reviews=rv; DB.verification_requests=vr;
+    DB.featured_requests=fr; DB.messages=ms; DB.referrals=rf; DB.withdrawals=wd; DB.activity_log=al; DB.announcements=an;
+    DB.demo_requests=dr;
+    await loadSocialData();
+    save();
+  } else {
+    // Refresh local data so changes appear immediately across open tabs.
+    Object.keys(DB).forEach(k=>{ DB[k]=LS.get(k,DB[k]); });
+  }
+}
+async function recordActivity(action,details={}){
+  if(!ME)return;
+  const row={id:uid(),user_id:ME.id,action,details,created_at:new Date().toISOString()};
+  DB.activity_log=DB.activity_log||[];DB.activity_log.unshift(row);save();
+  if(SB){const {error}=await SB.from("activity_log").insert(row);if(error)console.warn(error.message);}
+}
+async function apiInsert(table,row){
+  if(SB){
+    const {error}=await SB.from(table).insert(row);
+    if(error){
+      console.error(`Supabase insert failed for ${table}:`,error);
+      throw new Error(error.message || `Could not save ${table}`);
+    }
+  }
+  DB[table].push(row); save();
+}
+// Pulls this user's own profile back from storage — used so that admin actions
+// (verifying a user, approving a withdrawal) are reflected in the logged-in
+// session without requiring a fresh login. Cheap: one row (SB) or one local read.
+// Keeps Home/Browse/Near Me reasonably fresh against admin actions (listing
+// removed, featured, a new sample listing added) without needing a full
+// page reload. Lightweight — just the two requests tables, not everything.
+async function refreshListings(){
+  if(!SB) return;
+  try{
+    const [rq,dr]=await Promise.all([SB.from("requests").select("*"),SB.from("demo_requests").select("*").order("created_at",{ascending:false})]);
+    if(rq.data) DB.requests=rq.data;
+    if(dr.data) DB.demo_requests=dr.data;
+    save();
+  }catch(e){ /* offline — next tick will retry */ }
+  if(!$("view-home").classList.contains("hidden")) renderHome();
+  if(!$("view-browse").classList.contains("hidden")) renderBrowse();
+  if(!$("view-nearby").classList.contains("hidden")) renderNearby();
+}
+async function refreshMe(){
+  if(!ME) return;
+  if(SB){
+    const {data}=await SB.from("profiles").select("*").eq("id",ME.id).single();
+    if(data){ ME=data; LS.set("me",ME); }
+  } else {
+    DB.users = LS.get("users", DB.users);
+    const fresh=DB.users.find(u=>u.id===ME.id);
+    if(fresh){ ME=fresh; LS.set("me",ME); }
+  }
+  // If an admin bans/suspends this account while they're already logged in,
+  // kick them out right away instead of waiting for their next login attempt.
+  if(ME && (ME.status==="banned"||ME.status==="suspended"||ME.status==="deleted")){
+    toast("This account is no longer active. Please contact Skill Mate support.");
+    logout();
+  }
+}
+
+/* ================= VIEWS ================= */
+const VIEWS=["landing","home","browse","nearby","post","auth","dashboard","settings","profile","social"];
+function go(v,arg){
+  if(!ME && ["browse","nearby","post","dashboard","settings","profile"].includes(v)){ if(v==="post"||v==="dashboard"||v==="settings"||v==="profile") return go("auth"); }
+  VIEWS.forEach(x=>$("view-"+x).classList.toggle("hidden",x!==v));
+  const mainNav=$("mainBottomNav"), socialNav=$("socialBottomNav");
+  if(mainNav&&socialNav){ mainNav.style.display=v==="social"?"none":"flex"; socialNav.style.display=v==="social"?"flex":"none"; }
+  const siteHeader=document.querySelector("header.nav"), siteFooter=document.querySelector("footer"), supportWidget=$("chatWidget");
+  document.documentElement.classList.toggle('social-active',v==='social');
+  document.body.classList.toggle('social-active',v==='social');
+  if(siteHeader) siteHeader.style.display=v==="social"?"none":"";
+  if(siteFooter) siteFooter.style.display=v==="social"?"none":"";
+  if(supportWidget) supportWidget.style.display=v==="social"?"none":"";
+  if(v==="social") socialGo(arg||"videos");
+  else document.querySelectorAll("#mainBottomNav .bn-item").forEach(a=>a.classList.toggle("active",a.dataset.view===v));
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(v==="browse") renderBrowse();
+  if(v==="nearby") setTimeout(initMap,60);
+  if(v==="dashboard"){ renderDashboard(); setTimeout(()=>{ checkClosePrompts(); checkPendingReviews(); },300); }
+  if(v==="profile") renderProfile(arg);
+  if(v==="settings") renderSettings();
+  if(v==="post"){
+    if(!ME){ toast("Log in to post a job"); return go("auth"); }
+    if(!LS.get("guide_seen",false)) openGuideModal();
+  }
+}
+function authTab(t){
+  $("loginBox").classList.toggle("hidden",t!=="login");
+  $("signupBox").classList.toggle("hidden",t==="login");
+  $("tabLogin").classList.toggle("on",t==="login");
+  $("tabSignup").classList.toggle("on",t!=="login");
+  if(t==="signup" && !LS.get("signup_guide_seen",false)) openSignupGuide();
+}
+
+/* ---------- auth ---------- */
+async function signup(){
+  const req={suName:"full name",suPhone:"phone",suEmail:"email",suPass:"password",suCity:"city",suSkill:"skill"};
+  for(const k in req){ if(!$(k).value.trim()) return toast("Please enter your "+req[k]); }
+  if(!isValidEmail($("suEmail").value)) return toast("Enter a valid email address (e.g. name@example.com)");
+  if(!isValidPhone($("suPhone").value)) return toast("Enter a valid Nigerian phone number (e.g. 08012345678)");
+  if($("suPass").value.length<6) return toast("Password must be 6+ characters");
+  if(!PENDING.avatar) return toast("Please upload a profile picture");
+  const email=$("suEmail").value.trim().toLowerCase();
+  if(DB.users.some(u=>u.email===email)) return toast("Email already registered");
+  const role=$("suRole").value;
+  PENDING_SIGNUP={
+    id:uid(), role, name:$("suName").value.trim(), phone:normalizePhone($("suPhone").value),
+    email, password:$("suPass").value,
+    state:$("suState").value, city:$("suCity").value.trim(), gender:$("suGender").value,
+    dob:$("suDob").value || null, skill:$("suSkill").value.trim(), experience:$("suExp").value,
+    business_name:$("suBiz").value.trim(), years:$("suYears").value ? Number($("suYears").value) : null, address:$("suAddr").value.trim(),
+    bio:$("suBio").value.trim(), link:$("suLink").value.trim(), avatar:PENDING.avatar,
+    is_content_creator:$("suCreator").checked,
+    creator_platforms:$("suCreatorPlatforms").value.trim(),
+    creator_followers:Number($("suCreatorFollowers").value||0),
+    refer_code:makeReferCode(), referred_by:($("suRefCode")?$("suRefCode").value.trim().toUpperCase():"")||null,
+    wallet_balance:0,
+    verified:false, email_verified:false, status:"active", created_at:new Date().toISOString()
+  };
+  requestEmailCode(email);
+}
+/* ---------- email verification ---------- */
+async function requestEmailCode(email){
+  if(!MEDIA_API){
+    openVerifyModal(email,"212121");
+    return;
+  }
+  toast("Sending a verification code to "+email+"…");
+  try{
+    const res=await fetch(MEDIA_API+"/api/send-verification",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email})});
+    const j=await res.json().catch(()=>({}));
+    if(!res.ok) return toast(j.error||"Could not send verification code");
+    openVerifyModal(email, j.devCode);
+  }catch(e){ toast("Could not reach verification service. Please try again."); }
+}
+function openVerifyModal(email, devCode){
+  $("modalRoot").innerHTML=`<div class="modal" onclick="if(event.target===this)cancelVerify()"><div class="panel" style="width:min(420px,94vw);text-align:center">
+    <div class="spread" style="text-align:left"><span></span><button class="btn ghost sm" onclick="cancelVerify()">✕</button></div>
+    <div style="font-size:44px;line-height:1;margin-top:-8px">📩</div>
+    <h2 style="margin:14px 0 6px">Verify your email</h2>
+    <p class="meta" style="margin:0 0 18px;line-height:1.6">We sent a 6-digit code to <b>${esc(email)}</b>. Enter it below to finish creating your account.</p>
+    <input id="vCode" maxlength="6" placeholder="123456" style="text-align:center;font-size:22px;letter-spacing:8px;margin-bottom:14px"/>
+    <button class="btn block" onclick="confirmCode()">Verify &amp; create account</button>
+    <button class="btn ghost block" style="margin-top:10px" onclick="requestEmailCode('${esc(email)}')">Resend code</button>
+  </div></div>`;
+}
+function cancelVerify(){ closeModal(); PENDING_SIGNUP=null; }
+async function confirmCode(){
+  if(!PENDING_SIGNUP) return closeModal();
+  const code=$("vCode").value.trim();
+  if(!code) return toast("Enter the code we sent you");
+  try{
+    if(!MEDIA_API){ if(code!=="212121") return toast("Incorrect code, try again"); }
+    else {
+    const res=await fetch(MEDIA_API+"/api/verify-code",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({email:PENDING_SIGNUP.email,code})});
+    const j=await res.json().catch(()=>({}));
+    if(!res.ok||!j.verified) return toast(j.error||"Incorrect code, try again");
+    }
+  }catch(e){ return toast("Could not reach verification service"); }
+  closeModal();
+  PENDING_SIGNUP.email_verified=true;
+  await finalizeSignup();
+}
+async function finalizeSignup(){
+  const u=PENDING_SIGNUP; if(!u) return;
+  try{ await apiCreateUser(u); }catch(e){ return toast("Sign up failed: "+e.message) }
+  if(u.referred_by) await creditReferrer(u.referred_by, u.id); recordActivity("account_created",{role:u.role});
+  ME=u; LS.set("me",ME); PENDING={media:[],avatar:null}; PENDING_SIGNUP=null;
+  paintAuth(); go("dashboard"); loadChat(); checkForceAnnouncements(); updateAnnouncementBadge(); maybeShowWaChannelPopup();
+  openWelcomeModal(u);
+}
+function openWelcomeModal(u){
+  const isBiz=u.role==="business";
+  $("modalRoot").innerHTML=`<div class="modal" onclick="if(event.target===this)closeModal()"><div class="panel" style="width:min(460px,94vw);text-align:center">
+    <div style="font-size:52px;line-height:1">🎉</div>
+    <h2 style="margin:14px 0 6px">Congratulations, ${esc(u.name.split(" ")[0])}!</h2>
+    <p class="meta" style="line-height:1.65">Your Skill Mate account is ready. ${isBiz?"You can now post jobs and apprenticeships, and start hiring skilled people near you.":"You can now browse jobs, apply to apprenticeships, and get discovered by businesses near you."}</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
+      ${isBiz?`<button class="btn block" onclick="closeModal();go('post')">Post your first job</button>`:`<button class="btn block" onclick="closeModal();go('browse')">Browse jobs now</button>`}
+      <button class="btn ghost block" onclick="closeModal()">Skip, I'll explore myself</button>
+    </div>
+  </div></div>`;
+}
+function login(){
+  const e=$("liEmail").value.trim().toLowerCase(), p=$("liPass").value;
+  const u=DB.users.find(u=>u.email===e && u.password===p);
+  if(!u) return toast("Invalid email or password");
+  if(u.status==="suspended"||u.status==="banned"||u.status==="deleted") return toast("This account is not active. Please contact Skill Mate support.");
+  ME=u; LS.set("me",ME); paintAuth(); recordActivity("login"); toast("Logged in"); go("dashboard"); loadChat(); checkForceAnnouncements(); updateAnnouncementBadge(); maybeShowWaChannelPopup();
+}
+function logout(){ ME=null; LS.set("me",null); paintAuth(); go("landing"); startLanding(); toast("Logged out"); if(window.DM_CLOSE) DM_CLOSE(); }
+function paintAuth(){
+  $("navAuth").innerHTML = ME
+    ? `<span class="row" style="gap:8px;margin-left:8px"><button class="btn ghost sm" onclick="go('settings')">⚙ Settings</button><img class="avatar" src="${esc(ME.avatar)}" onclick="go('profile','${ME.id}')" title="${esc(ME.name)}"/><button class="btn ghost sm" onclick="logout()">Log out</button></span>`
+    : `<button class="btn sm" style="margin-left:8px" onclick="go('auth')">Log in / Sign up</button>`;
+}
+
+/* ---------- edit profile ---------- */
+let EDIT_AVATAR=null;
+function openEditProfile(){
+  if(!ME) return go("auth");
+  EDIT_AVATAR=null;
+  $("modalRoot").innerHTML=`<div class="modal" onclick="if(event.target===this)closeModal()"><div class="panel" style="width:min(560px,94vw)">
+    <div class="spread"><h2>Edit profile</h2><button class="btn ghost sm" onclick="closeModal()">✕</button></div>
+    <div class="form-grid" style="margin-top:12px">
+      <div class="full row" style="gap:14px;align-items:center">
+        <img id="epAvatarPrev" class="avatar" style="width:64px;height:64px" src="${esc(ME.avatar)}"/>
+        <div><div class="upload" style="padding:8px 14px" onclick="document.getElementById('epAvatar').click()">Change photo</div>
+        <input type="file" id="epAvatar" class="hidden" accept="image/*" onchange="pickEditAvatar(this)"/></div>
+      </div>
+      <div class="full"><label>Full name</label><input id="epName" value="${esc(ME.name)}"/></div>
+      <div><label>Phone</label><input id="epPhone" value="${esc(ME.phone||"")}"/></div>
+      <div><label>Business name</label><input id="epBiz" value="${esc(ME.business_name||"")}"/></div>
+      <div><label>State</label><select id="epState" onchange="populateCities('epState','epCity')"></select></div>
+      <div><label>City / Area</label><select id="epCity"></select></div>
+      <div><label>Skill / Trade</label><input id="epSkill" list="skillList" value="${esc(ME.skill||"")}"/></div>
+      <div><label>Experience</label><select id="epExp"><option${ME.experience==="Beginner"?" selected":""}>Beginner</option><option${ME.experience==="Intermediate"?" selected":""}>Intermediate</option><option${ME.experience==="Advanced"?" selected":""}>Advanced</option></select></div>
+      <div class="full"><label>Link (portfolio / IG / WhatsApp)</label><input id="epLink" value="${esc(ME.link||"")}"/></div>
+      <div class="full"><label>Bio</label><textarea id="epBio" rows="3">${esc(ME.bio||"")}</textarea></div>
+      <div class="full row" style="align-items:center"><input type="checkbox" id="epCreator" style="width:auto" ${ME.is_content_creator?"checked":""}/><label for="epCreator" style="margin:0;text-transform:none">🎥 Content creator</label></div>
+      <div><label>Creator platforms</label><input id="epCreatorPlatforms" value="${esc(ME.creator_platforms||"")}"/></div>
+      <div><label>Audience / followers</label><input id="epCreatorFollowers" type="number" value="${Number(ME.creator_followers||0)}"/></div>
+      <div class="full"><button class="btn block" onclick="saveEditProfile()">Save changes</button></div>
+      <div class="full"><button class="btn danger block" onclick="deleteMyAccount()">Delete my account</button></div>
+    </div>
+  </div></div>`;
+  const opts=Object.keys(STATES).map(s=>`<option${s===ME.state?" selected":""}>${s}</option>`).join("");
+  $("epState").innerHTML=opts;
+  populateCities("epState","epCity");
+  if(ME.city) $("epCity").value=ME.city;
+}
+async function pickEditAvatar(input){
+  const f=input.files[0]; if(!f) return;
+  const m=await uploadMedia(f,'profile'); EDIT_AVATAR=m.url; $("epAvatarPrev").src=m.url;
+}
+async function saveEditProfile(){
+  const name=$("epName").value.trim(); if(!name) return toast("Name is required");
+  const phone=$("epPhone").value.trim();
+  if(phone && !isValidPhone(phone)) return toast("Enter a valid Nigerian phone number (e.g. 08012345678)");
+  const patch={
+    name, phone:phone?normalizePhone(phone):phone, business_name:$("epBiz").value.trim(),
+    state:$("epState").value, city:$("epCity").value, skill:$("epSkill").value.trim(),
+    experience:$("epExp").value, link:$("epLink").value.trim(), bio:$("epBio").value.trim(),
+    is_content_creator:$("epCreator").checked, creator_platforms:$("epCreatorPlatforms").value.trim(),
+    creator_followers:Number($("epCreatorFollowers").value||0)
+  };
+  if(EDIT_AVATAR) patch.avatar=EDIT_AVATAR;
+  try{ await apiUpdateUser(ME.id,patch); }catch(e){ return toast("Could not save: "+e.message); }
+  closeModal(); recordActivity("profile_updated",{fields:Object.keys(patch)}); toast("Profile updated"); paintAuth(); renderDashboard();
+}
+
+/* ---------- posting ---------- */
+async function submitPost(){
+  if(!ME) return go("auth");
+  if(!$("pTitle").value.trim()||!$("pSkill").value.trim()||!$("pCity").value.trim())
+    return toast("Title, skill and city are required");
+  const phoneToUse=$("pPhone").value.trim()||ME.phone;
+  if(phoneToUse && !isValidPhone(phoneToUse)) return toast("Enter a valid Nigerian phone number (e.g. 08012345678)");
+  const st=$("pState").value, c=STATES[st]||[9.08,8.67];
+  const r={
+    id:uid(), user_id:ME.id, type:$("pType").value, skill:$("pSkill").value.trim(),
+    title:$("pTitle").value.trim(), state:st, city:$("pCity").value.trim(),
+    experience:$("pExp").value, slots:+$("pSlots").value||1, duration:$("pDuration").value.trim(),
+    hours:$("pHours").value.trim(), accommodation:$("pAccom").value, meals:$("pMeals").value,
+    pay:$("pPay").value.trim(), phone:normalizePhone(phoneToUse), link:$("pLink").value.trim(),
+    description:$("pDesc").value.trim(), requirements:$("pReq").value.trim(),
+    media:PENDING.media, lat:c[0]+(Math.random()-.5)*.25, lng:c[1]+(Math.random()-.5)*.25,
+    hide_contact:$("pHideContact").checked, content_creator_opportunity:$("pCreatorOpportunity").checked, close_prompt_dismissed:false,
+    featured:false, status:"active", created_at:new Date().toISOString()
+  };
+  await apiInsert("requests",r); recordActivity("listing_created",{request_id:r.id,title:r.title,type:r.type});
+  PENDING={media:[],avatar:null}; $("pThumbs").innerHTML="";
+  ["pTitle","pCity","pDuration","pHours","pPay","pLink","pDesc","pReq"].forEach(i=>$(i).value="");
+  $("pHideContact").checked=false; $("pCreatorOpportunity").checked=false;
+  toast("Job published 🎉"); renderAll(); go("browse");
+}
+
+/* ---------- cards ---------- */
+function ownerOf(r){
+  if(r._demo) return {name:r.owner_name||"Skill Mate User",avatar:r.owner_avatar||"",verified:r.owner_verified!==false,business_name:r.owner_business_name||"",is_owner:false};
+  return DB.users.find(u=>u.id===r.user_id) || {name:"Skill Mate User",avatar:"",verified:false};
+}
+// Contact (phone/link) on a listing can be hidden by its owner. It's revealed to:
+// the owner themselves, an admin, or an applicant that owner has already accepted.
+// Sample/example listings never expose a contact — there's no real business behind them.
+function contactVisible(r){
+  if(r._demo) return false;
+  if(!r.hide_contact) return true;
+  if(!ME) return false;
+  if(ME.id===r.user_id || ME.role==="admin") return true;
+  return DB.applications.some(a=>a.request_id===r.id && a.user_id===ME.id && a.status==="accepted");
+}
+/* ---------- sample/example listings (shown to fill out the marketplace; never
+   real businesses, so applying/chatting/saving on them is short-circuited with
+   a friendly explanation instead of silently failing or creating dead data) ---------- */
+function demoRequestsMerged(){
+  return (DB.demo_requests||[]).map(d=>({...d,user_id:d.id,status:"active",hide_contact:true,_demo:true}));
+}
+function allRequestsMerged(){ return [...DB.requests, ...demoRequestsMerged()]; }
+function isDemoId(id){ return (DB.demo_requests||[]).some(d=>d.id===id); }
+function demoNotice(){ toast("This is a sample listing to show what a great post looks like — real business listings will let you do this."); }
+function card(r){
+  const o=ownerOf(r);
+  const cover=(r.media||[]).find(m=>m.type&&m.type.startsWith("image"));
+  const coverStyle = cover
+    ? `background-image:linear-gradient(180deg,rgba(10,14,20,0) 55%,rgba(10,14,20,.45)),url('${esc(cover.url)}')`
+    : `background:var(--grad)`;
+  return `<article class="card">
+    <div class="cover" style="${coverStyle}">
+      ${cover?"":`<div style="position:absolute;inset:0;display:grid;place-items:center;font-size:44px;opacity:.9">${skillEmoji(r.skill)}</div>`}
+      <div style="position:absolute;top:10px;left:10px" class="row">
+        <span class="badge">${esc(r.type)}</span>${r.featured?'<span class="badge gold">★ Featured</span>':''}${r.content_creator_opportunity?'<span class="badge" style="background:rgba(155,89,255,.14);color:#8b5cf6">🎥 Creator</span>':''}
+        ${o.is_owner?'<span class="badge gold">👑 Owner</span>':''}${o.verified?'<span class="badge gold">✔ Verified</span>':''}
+        ${r.status==="cancelled"?'<span class="badge grey">Closed</span>':''}
+      </div>
+      <div class="badge grey" style="position:absolute;bottom:10px;right:10px;background:rgba(255,255,255,.92)">${skillEmoji(r.skill)} ${esc(r.skill)}</div>
+    </div>
+    <div class="body">
+      <h3>${esc(r.title)}</h3>
+      <div class="meta">📍 ${esc(r.city)}, ${esc(r.state)} • ${esc(r.experience)} accepted</div>
+      <div class="row">
+        <span class="badge grey">${skillEmoji(r.skill)} ${esc(r.skill)}</span>
+        ${r.duration?`<span class="badge grey">⏳ ${esc(r.duration)}</span>`:""}
+        <span class="badge grey">🏠 Accom: ${esc(r.accommodation)}</span>
+        <span class="badge grey">🍲 Meals: ${esc(r.meals)}</span>
+      </div>
+      <p class="meta" style="margin:0">${esc((r.description||"").slice(0,110))}${(r.description||"").length>110?"…":""}</p>
+      <div class="spread" style="margin-top:auto">
+        <span class="meta">${timeAgo(r.created_at)}</span>
+        <span class="row"><button class="btn ghost sm" onclick="toggleSave('${r.id}')">${isSaved(r.id)?"★ Saved":"☆ Save"}</button>
+        ${ME&&ME.id!==r.user_id?`<button class="btn ghost sm" onclick="openListingChat('${r.id}')">💬 Chat</button>`:""}
+        <button class="btn sm" onclick="openRequest('${r.id}')">View & Apply</button></span>
+      </div>
+    </div></article>`;
+}
+function isSaved(id){ return ME && DB.saved.some(s=>s.user_id===ME.id&&s.request_id===id) }
+async function toggleSave(id){
+  if(!ME) return go("auth");
+  if(isDemoId(id)) return demoNotice();
+  const i=DB.saved.findIndex(s=>s.user_id===ME.id&&s.request_id===id);
+  try{
+    if(i>-1){
+      if(SB){const {error}=await SB.from("saved").delete().eq("user_id",ME.id).eq("request_id",id);if(error)throw error;}
+      DB.saved.splice(i,1); toast("Removed from saved");
+    }else{
+      const row={user_id:ME.id,request_id:id,created_at:new Date().toISOString()};
+      if(SB){const {error}=await SB.from("saved").insert(row);if(error)throw error;}
+      DB.saved.push(row); toast("Saved ★");
+    }
+    save(); renderAll();
+  }catch(e){console.error("Supabase saved-items write failed:",e);toast("Could not update saved items: "+(e.message||"database error"));}
+}
+
+/* ---------- modal: request detail + apply ---------- */
+function openRequest(id){
+  const r=allRequestsMerged().find(x=>x.id===id); if(!r)return; const o=ownerOf(r);
+  const isOwner = !!(ME && ME.id===r.user_id);
+  const media=(r.media||[]).map(m=>m.type&&m.type.startsWith("video")
+    ? `<video src="${esc(m.url)}" controls style="width:150px;height:110px;border-radius:12px;object-fit:cover"></video>`
+    : `<img src="${esc(m.url)}" style="width:150px;height:110px;border-radius:12px;object-fit:cover"/>`).join("");
+  $("modalRoot").innerHTML=`<div class="modal" onclick="if(event.target===this)closeModal()"><div class="panel">
+    <div class="spread"><h2>${esc(r.title)}</h2><button class="btn ghost sm" onclick="closeModal()">✕</button></div>
+    <div class="row" style="margin:12px 0">
+      <span class="badge">${esc(r.type)}</span><span class="badge grey">${skillEmoji(r.skill)} ${esc(r.skill)}</span>
+      <span class="badge grey">${esc(r.experience)}</span><span class="badge grey">📍 ${esc(r.city)}, ${esc(r.state)}</span>
+      ${o.is_owner?'<span class="badge gold">👑 Skill Mate Owner</span>':(o.verified?'<span class="badge gold">✔ Verified business</span>':'<span class="badge red">Not yet verified</span>')}
+    </div>
+    <div class="row" style="gap:14px;align-items:center;background:var(--surface-2);padding:12px;border-radius:14px">
+      <img class="avatar" style="width:52px;height:52px" src="${esc(o.avatar||'')}"/>
+      <div><b>${esc(o.business_name||o.name)}</b><div class="meta">${esc(o.name)} • ${esc(o.city||"")} ${esc(o.state||"")}</div></div>
+      <a class="btn ghost sm" style="margin-left:auto" onclick="closeModal();go('profile','${o.id}')">View profile</a>
+    </div>
+    <div class="form-grid" style="margin-top:16px">
+      <div><label>Slots</label><div>${r.slots}</div></div>
+      <div><label>Duration</label><div>${esc(r.duration||"—")}</div></div>
+      <div><label>Working hours</label><div>${esc(r.hours||"—")}</div></div>
+      <div><label>Stipend / Pay</label><div>${esc(r.pay||"—")}</div></div>
+      <div><label>Accommodation</label><div>${esc(r.accommodation)}</div></div>
+      <div><label>Meals</label><div>${esc(r.meals)}</div></div>
+      <div class="full"><label>Description</label><div>${esc(r.description||"—")}</div></div>
+      <div class="full"><label>Requirements</label><div>${esc(r.requirements||"—")}</div></div>
+      <div><label>Phone</label><div>${!ME?"Log in to view":contactVisible(r)?esc(r.phone||"—"):"🔒 Hidden until you're accepted"}</div></div>
+      <div><label>Link</label><div>${!contactVisible(r)?"🔒 Hidden until you're accepted":(r.link?`<a style="color:var(--primary-2)" target="_blank" href="${esc(r.link)}">${esc(r.link)}</a>`:"—")}</div></div>
+      ${media?`<div class="full"><label>Photos & videos</label><div class="row">${media}</div></div>`:""}
+    </div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:20px 0"/>
+    ${r._demo ? `
+    <div class="panel" style="background:var(--surface-2)">
+      <b>Applications for this listing are closed.</b>
+      <p class="meta" style="margin-top:6px">This is a sample listing shown to give you an idea of what a great post looks like on Skill Mate. New real listings from businesses and job seekers appear here every day.</p>
+    </div>` : isOwner ? `
+    <div class="panel" style="background:var(--surface-2)">
+      <b>This is your own listing.</b>
+      <p class="meta" style="margin-top:6px">You can't apply to your own request. Manage it, review applicants, or cancel it from your <a style="color:var(--primary-2)" onclick="closeModal();go('dashboard')">dashboard</a>.</p>
+    </div>` : `
+    <h3>Apply for this opportunity</h3>
+    <div class="form-grid" style="margin-top:10px">
+      <div class="full"><label>Message to the business</label><textarea id="apMsg" rows="3" placeholder="Why you want this, what you already know..."></textarea></div>
+      <div><label>Your phone</label><input id="apPhone" value="${ME?esc(ME.phone):""}"/></div>
+      <div><label>Your link (portfolio / IG / WhatsApp)</label><input id="apLink" value="${ME?esc(ME.link||""):""}"/></div>
+      <div class="full"><label>Attach photos / videos of your work</label>
+        <div class="upload" onclick="document.getElementById('apMedia').click()">📎 Upload proof of work</div>
+        <input type="file" id="apMedia" class="hidden" multiple accept="image/*,video/*" onchange="pickMedia(this,'apThumbs','application')"/>
+        <div class="thumbs" id="apThumbs"></div></div>
+      <div class="full row"><button class="btn" onclick="apply('${r.id}')">Send application</button>
+        <button class="btn ghost" onclick="openListingChat('${r.id}')">💬 Chat owner</button>
+        <button class="btn ghost" onclick="report('${r.id}')">🚩 Report listing</button></div>
+    </div>`}
+  </div></div>`;
+}
+function closeModal(){ $("modalRoot").innerHTML=""; PENDING.media=[] }
+async function apply(rid){
+  if(!ME) { closeModal(); return go("auth") }
+  if(isDemoId(rid)) { closeModal(); return demoNotice(); }
+  const r=DB.requests.find(x=>x.id===rid);
+  if(r && r.user_id===ME.id) { closeModal(); return toast("You can't apply to your own listing"); }
+  if(!$("apMsg").value.trim()) return toast("Write a short message");
+  const a={id:uid(),request_id:rid,user_id:ME.id,message:$("apMsg").value.trim(),
+    phone:$("apPhone").value.trim(),link:$("apLink").value.trim(),media:PENDING.media,
+    status:"pending",created_at:new Date().toISOString()};
+  await apiInsert("applications",a); recordActivity("application_sent",{request_id:rid}); recordActivity("application_sent",{request_id:rid}); recordActivity("application_sent",{request_id:rid});
+  PENDING.media=[]; closeModal(); toast("Application sent ✅");
+}
+async function report(rid){
+  if(isDemoId(rid)) return demoNotice();
+  const reason=prompt("Why are you reporting this listing?"); if(!reason)return;
+  await apiInsert("reports",{id:uid(),request_id:rid,user_id:ME?ME.id:null,reason,status:"open",created_at:new Date().toISOString()}); recordActivity("listing_reported",{request_id:rid}); recordActivity("listing_reported",{request_id:rid}); recordActivity("listing_reported",{request_id:rid});
+  toast("Reported. Our admins will review it.");
+}
+
+/* ---------- signup guide (role-aware, skippable, shown once per device) ---------- */
+const SIGNUP_GUIDE_INTRO=[
+  {t:"Welcome — let's set you up right",c:"Choose \u201cApprentice / Job seeker\u201d if you want to find work or learn a trade, or \u201cBusiness owner / Artisan\u201d if you want to post jobs and hire. Pick the one that matches what you actually want."},
+  {t:"Upload a real profile photo",c:"A clear photo of your face (or your shop, if you're a business) builds trust immediately. Avoid logos, cartoons or blurry pictures \u2014 profiles with real photos get far more replies."},
+  {t:"Use your real name, phone & email",c:"Businesses and job seekers reach each other through these details, and your phone number becomes your contact on listings. Use ones you actually check."}
+];
+const SIGNUP_GUIDE_APPRENTICE=[
+  {t:"Pick your main skill honestly",c:"List the trade or skill you actually have or want to learn (e.g. \u201cPhone Repair\u201d, \u201cCatering\u201d) and choose your real experience level \u2014 Beginner, Intermediate or Advanced. This is how businesses find and match you to the right openings."},
+  {t:"Write a short, honest bio",c:"In 2\u20133 sentences, say what you can do, your availability, and why you're serious. A good bio gets you noticed by businesses before you even apply."},
+  {t:"Add a link if you have one",c:"A WhatsApp, Instagram or portfolio link lets businesses see proof of your work or reach you faster. It's optional, but it helps you stand out."}
+];
+const SIGNUP_GUIDE_BUSINESS=[
+  {t:"Add your business details",c:"Your business name, years in operation and address help job seekers trust you \u2014 and they're what you'll need later to earn a verified badge."},
+  {t:"Set the skill you're hiring for",c:"Choose the main skill/trade field that matches what you actually need help with. This is how the right apprentices and workers find your listings."},
+  {t:"Content creator? Say so",c:"If you also want influencer/creator collaborations, check \u201cI am a content creator / influencer\u201d and fill in your platforms and audience size."}
+];
+const SIGNUP_GUIDE_OUTRO=[
+  {t:"Referral code (optional)",c:"If a friend shared their Skill Mate link with you, paste their referral code here \u2014 it's how they get credit for bringing you in."},
+  {t:"One last step: email verification",c:"After you tap \u201cCreate account\u201d, we'll send a 6-digit code to your email. Enter it to activate your account \u2014 check spam if it doesn't arrive within a minute."}
+];
+let SU_GUIDE_STEPS=[]; let SU_GUIDE_STEP=0; let SU_GUIDE_DIR="fwd";
+function openSignupGuide(){
+  const role=$("suRole")?$("suRole").value:"apprentice";
+  SU_GUIDE_STEPS=[...SIGNUP_GUIDE_INTRO, ...(role==="business"?SIGNUP_GUIDE_BUSINESS:SIGNUP_GUIDE_APPRENTICE), ...SIGNUP_GUIDE_OUTRO];
+  SU_GUIDE_STEP=0; SU_GUIDE_DIR="fwd"; renderSignupGuideModal();
+}
+function renderSignupGuideModal(){
+  const s=SU_GUIDE_STEPS[SU_GUIDE_STEP], last=SU_GUIDE_STEP===SU_GUIDE_STEPS.length-1;
+  $("modalRoot").innerHTML=`<div class="modal" onclick="if(event.target===this)closeSignupGuide()"><div class="panel guide-step ${SU_GUIDE_DIR==="back"?"back":""}" style="width:min(480px,94vw)">
+    <div class="spread"><span class="badge">Sign up guide ${SU_GUIDE_STEP+1}/${SU_GUIDE_STEPS.length}</span><button class="btn ghost sm" onclick="closeSignupGuide()">Skip ✕</button></div>
+    <h2 style="margin:16px 0 8px">${esc(s.t)}</h2>
+    <p class="meta" style="font-size:14.5px;line-height:1.65">${esc(s.c)}</p>
+    <div class="row" style="margin-top:22px;justify-content:space-between">
+      <button class="btn ghost sm" ${SU_GUIDE_STEP===0?"disabled":""} onclick="signupGuideNav(-1)">← Back</button>
+      <button class="btn sm" onclick="signupGuideNav(1)">${last?"Got it, let's sign up →":"Next →"}</button>
+    </div>
+  </div></div>`;
+}
+function signupGuideNav(d){
+  if(d>0 && SU_GUIDE_STEP===SU_GUIDE_STEPS.length-1) return closeSignupGuide();
+  SU_GUIDE_DIR=d<0?"back":"fwd";
+  SU_GUIDE_STEP=Math.min(SU_GUIDE_STEPS.length-1,Math.max(0,SU_GUIDE_STEP+d)); renderSignupGuideModal();
+}
+function closeSignupGuide(){ LS.set("signup_guide_seen",true); closeModal(); }
+
+/* ---------- new-listing guide (skippable, shown once per device) ---------- */
+const GUIDE_STEPS=[
+  {t:"Choose the right request type",c:"Pick \u201cApprenticeship\u201d, \u201cHandwork Job\u201d, \u201cFull-time Job\u201d, \u201cPart-time Job\u201d, \u201cContract Gig\u201d, or \u201cAvailable For Work\u201d \u2014 whichever matches what you're actually offering. This is the first filter people search by."},
+  {t:"Use a clear, specific title",c:"Instead of \u201cNeed worker\u201d, try \u201cPhone Repair Apprentice Wanted \u2013 Ikeja\u201d. Specific titles get far more genuine applicants than vague ones."},
+  {t:"Set the right skill, city & experience level",c:"Pick the exact skill/trade, the correct state & city, and the experience level you're willing to accept. This is how Skill Mate matches the right people to your listing."},
+  {t:"Be upfront about pay & duration",c:"State the stipend/pay (or write \u201cNone\u201d if unpaid), the working hours, and how long the role lasts. Listings with real numbers are trusted faster and waste less of your time on mismatched applicants."},
+  {t:"Mention accommodation & meals honestly",c:"If you provide housing or feeding, say so \u2014 if not, mark \u201cNo\u201d. Being upfront here avoids wasted conversations later."},
+  {t:"Write a full description",c:"Explain what the apprentice/worker will actually learn or do, tools provided, and what a normal day looks like. The more detail, the fewer time-wasting questions you'll get."},
+  {t:"List clear requirements",c:"Say who you're looking for \u2014 age, experience level, location \u2014 so only serious, qualified people apply."},
+  {t:"Add real photos or videos",c:"Upload actual photos of your shop, workspace or past work instead of leaving it empty. Real photos make a listing feel genuine and get more replies."},
+  {t:"Decide if you want to hide your contact info",c:"Turn on \u201cHide my phone number & link\u201d if you'd rather review applications first and only share contact details with people you accept."},
+  {t:"Respond quickly & honestly",c:"Accept or reject applications promptly. Fast, honest responses are exactly what earns you the good reviews that lead to a verified badge."}
+];
+let GUIDE_STEP=0; let GUIDE_DIR="fwd";
+function openGuideModal(){ GUIDE_STEP=0; GUIDE_DIR="fwd"; renderGuideModal(); }
+function renderGuideModal(){
+  const s=GUIDE_STEPS[GUIDE_STEP], last=GUIDE_STEP===GUIDE_STEPS.length-1;
+  $("modalRoot").innerHTML=`<div class="modal" onclick="if(event.target===this)closeGuide()"><div class="panel guide-step ${GUIDE_DIR==="back"?"back":""}" style="width:min(480px,94vw)">
+    <div class="spread"><span class="badge">Guide ${GUIDE_STEP+1}/${GUIDE_STEPS.length}</span><button class="btn ghost sm" onclick="closeGuide()">Skip ✕</button></div>
+    <h2 style="margin:16px 0 8px">${esc(s.t)}</h2>
+    <p class="meta" style="font-size:14.5px;line-height:1.65">${esc(s.c)}</p>
+    <div class="row" style="margin-top:22px;justify-content:space-between">
+      <button class="btn ghost sm" ${GUIDE_STEP===0?"disabled":""} onclick="guideNav(-1)">← Back</button>
+      <button class="btn sm" onclick="guideNav(1)">${last?"Got it, let's post →":"Next →"}</button>
+    </div>
+  </div></div>`;
+}
+function guideNav(d){
+  if(d>0 && GUIDE_STEP===GUIDE_STEPS.length-1) return closeGuide();
+  GUIDE_DIR=d<0?"back":"fwd";
+  GUIDE_STEP=Math.min(GUIDE_STEPS.length-1,Math.max(0,GUIDE_STEP+d)); renderGuideModal();
+}
+function closeGuide(){ LS.set("guide_seen",true); closeModal(); }
+
+/* ---------- post-application reviews (feed verified-badge eligibility) ---------- */
+function pendingReviewsForMe(){
+  if(!ME) return [];
+  const ONE_DAY=24*60*60*1000;
+  return DB.applications.filter(a=>a.user_id===ME.id
+    && (Date.now()-new Date(a.created_at).getTime())>=ONE_DAY
+    && !DB.reviews.some(rv=>rv.application_id===a.id && rv.reviewer_id===ME.id));
+}
+function checkPendingReviews(){ const list=pendingReviewsForMe(); if(list.length) openReviewModal(list[0]); }
+let REVIEW_TARGET=null, RV_RATING=0;
+function openReviewModal(a){
+  REVIEW_TARGET=a; RV_RATING=0;
+  const r=DB.requests.find(x=>x.id===a.request_id)||{title:"that listing",user_id:null};
+  const o=DB.users.find(x=>x.id===r.user_id)||{name:"the person you applied to"};
+  $("modalRoot").innerHTML=`<div class="modal"><div class="panel" style="width:min(460px,94vw)">
+    <h2>How did it go with ${esc(o.business_name||o.name)}?</h2>
+    <p class="meta" style="margin:8px 0 16px">You applied to "${esc(r.title)}" about a day ago. A quick, honest review helps other job seekers \u2014 and helps good businesses and apprentices earn their verified badge.</p>
+    <div id="starPick" class="row" style="gap:6px;font-size:30px;margin-bottom:14px;cursor:pointer">
+      ${[1,2,3,4,5].map(n=>`<span data-n="${n}" onclick="pickStar(${n})">☆</span>`).join("")}
+    </div>
+    <textarea id="rvComment" rows="3" placeholder="Optional: what was your experience?"></textarea>
+    <div class="row" style="margin-top:14px;justify-content:space-between">
+      <button class="btn ghost sm" onclick="closeModal()">Maybe later</button>
+      <button class="btn sm" onclick="submitReview()">Submit review</button>
+    </div>
+  </div></div>`;
+}
+function pickStar(n){ RV_RATING=n; document.querySelectorAll("#starPick span").forEach((el,i)=>el.textContent=i<n?"★":"☆"); }
+async function submitReview(){
+  if(!RV_RATING) return toast("Please pick a star rating");
+  const a=REVIEW_TARGET; const r=DB.requests.find(x=>x.id===a.request_id);
+  const rv={id:uid(),application_id:a.id,request_id:a.request_id,reviewer_id:ME.id,reviewee_id:r?r.user_id:null,
+    rating:RV_RATING,comment:$("rvComment").value.trim(),created_at:new Date().toISOString()};
+  await apiInsert("reviews",rv);
+  closeModal(); toast("Thanks for your review!");
+  setTimeout(checkPendingReviews,400);
+}
+
+/* ---------- cancel listing + "still need this?" day-after popup ---------- */
+function closePromptCandidates(){
+  if(!ME) return [];
+  const ONE_DAY=24*60*60*1000;
+  return DB.requests.filter(r=>r.user_id===ME.id && r.status==="active" && !r.close_prompt_dismissed &&
+    DB.applications.some(a=>a.request_id===r.id && (Date.now()-new Date(a.created_at).getTime())>=ONE_DAY));
+}
+function checkClosePrompts(){ const list=closePromptCandidates(); if(list.length) openClosePrompt(list[0]); }
+function openClosePrompt(r){
+  $("modalRoot").innerHTML=`<div class="modal"><div class="panel" style="width:min(440px,94vw)">
+    <h2>Still need "${esc(r.title)}"?</h2>
+    <p class="meta" style="margin:8px 0 18px">It's been a day since someone applied. If you've already found who you need, close the listing so others stop applying.</p>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn ghost sm" onclick="dismissClosePrompt('${r.id}')">Keep it open</button>
+      <button class="btn danger sm" onclick="cancelListing('${r.id}',true)">Yes, close listing</button>
+    </div>
+  </div></div>`;
+}
+async function dismissClosePrompt(id){
+  const r=DB.requests.find(x=>x.id===id);
+  if(r){ r.close_prompt_dismissed=true; save(); if(SB) await SB.from("requests").update({close_prompt_dismissed:true}).eq("id",id); }
+  closeModal(); setTimeout(checkClosePrompts,300);
+}
+async function cancelListing(id,fromPrompt){
+  const r=DB.requests.find(x=>x.id===id); if(!r) return;
+  if(!fromPrompt && !confirm("Cancel this listing? It will no longer be visible to applicants.")) return;
+  r.status="cancelled"; r.close_prompt_dismissed=true; save();
+  if(SB) await SB.from("requests").update({status:"cancelled",close_prompt_dismissed:true}).eq("id",id);
+  toast("Listing cancelled"); closeModal(); renderAll(); renderDashboard();
+  setTimeout(checkClosePrompts,300);
+}
+
+/* ---------- verification (verified badge) ---------- */
+// Manual bank-transfer payment: no payment gateway. Users pay this exact
+// account, upload a receipt, and an admin confirms it in the console.
+const PAY_BANK = { bank:"Moniepoint", account_number:"5097550936", account_name:"Fortune ukadike chinazaekpere" };
+function paymentInstructionsHTML(amount){
+  return `<div class="panel" style="background:var(--surface-2);margin-bottom:14px">
+    <div class="spread" style="margin-bottom:8px"><b>Bank transfer details</b><span class="badge gold">Send exactly ₦${amount.toLocaleString("en-NG")}</span></div>
+    <div class="meta" style="line-height:1.9">
+      Bank name: <b>${esc(PAY_BANK.bank)}</b><br>
+      Account number: <b>${esc(PAY_BANK.account_number)}</b><br>
+      Account name: <b>${esc(PAY_BANK.account_name)}</b>
+    </div>
+    <p class="meta" style="margin-top:8px;font-size:12.5px">Transfer the exact amount above, then upload your receipt below. An admin confirms it and approves your application — usually within 1–2 days.</p>
+  </div>`;
+}
+let PENDING_RECEIPT=null;
+async function pickReceipt(input, thumbId){
+  const f=input.files[0]; if(!f) return;
+  toast("Uploading receipt…");
+  const m=await uploadMedia(f,'receipt');
+  PENDING_RECEIPT=m.url;
+  $(thumbId).innerHTML=`<img src="${esc(m.url)}"/>`;
+}
+function receiptUploadHTML(inputId, thumbId){
+  return `<div class="full"><label>Upload payment receipt</label>
+    <div class="upload" onclick="document.getElementById('${inputId}').click()">🧾 Click to upload your receipt (screenshot or photo)</div>
+    <input type="file" id="${inputId}" class="hidden" accept="image/*" onchange="pickReceipt(this,'${thumbId}')"/>
+    <div class="thumbs" id="${thumbId}"></div>
+  </div>`;
+}
+function successfulUses(u){
+  return DB.applications.filter(a=>a.status==="accepted" &&
+    (a.user_id===u.id || (DB.requests.find(r=>r.id===a.request_id)||{}).user_id===u.id)).length;
+}
+function goodReviews(u){ return DB.reviews.filter(r=>r.reviewee_id===u.id && r.rating>=4).length }
+function myVerificationRequest(){
+  return DB.verification_requests.filter(v=>v.user_id===ME.id).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
+}
+function verificationPanel(){
+  const uses=successfulUses(ME), good=goodReviews(ME), req=myVerificationRequest(), usesOk=uses>=2;
+  if(ME.verified) return `<div class="panel" style="margin-bottom:20px;border-color:rgba(255,180,0,.4)">
+    <div class="row" style="gap:10px"><span class="badge gold">✔ Verified</span><span class="meta">Your account is verified. Thanks for being trusted on Skill Mate!</span></div></div>`;
+  if(req && req.status==="pending") return `<div class="panel" style="margin-bottom:20px">
+    <div class="spread"><h3>Verification application submitted</h3><span class="badge gold">Pending review</span></div>
+    <p class="meta" style="margin-top:8px">We're reviewing your receipt and details. This usually takes 1–2 days.</p></div>`;
+  if(req && req.status==="rejected") return `<div class="panel" style="margin-bottom:20px">
+    <div class="spread"><h3>Verification</h3><span class="badge red">Not approved</span></div>
+    <p class="meta" style="margin-top:8px">${esc(req.admin_note||"Your last application wasn't approved.")}</p>
+    <button class="btn sm" style="margin-top:10px" ${usesOk?"":"disabled"} onclick="openVerifyBadgeModal()">Apply again</button></div>`;
+  return `<div class="panel" style="margin-bottom:20px">
+    <h3>Get the verified badge ✔</h3>
+    <p class="meta" style="margin:8px 0 12px">Verified accounts stand out and get more trust from applicants and businesses.</p>
+    <div class="row" style="gap:22px;margin-bottom:12px">
+      <div><b style="font-family:Sora;font-size:20px">${uses}/2</b><div class="meta">Successful uses</div></div>
+      <div><b style="font-family:Sora;font-size:20px">${good}/2</b><div class="meta">Good reviews (4★+)</div></div>
+    </div>
+    ${usesOk?`<button class="btn sm" onclick="openVerifyBadgeModal()">Apply for verification — ₦3,999</button>`
+      :`<button class="btn ghost sm" disabled>Apply for verification (need ${2-uses} more successful use${2-uses===1?"":"s"})</button>`}
+  </div>`;
+}
+function openVerifyBadgeModal(){
+  if(successfulUses(ME)<2) return toast("You need 2 successful uses of Skill Mate before applying");
+  PENDING_RECEIPT=null;
+  $("modalRoot").innerHTML=`<div class="modal" onclick="if(event.target===this)closeModal()"><div class="panel" style="width:min(500px,94vw)">
+    <div class="spread"><h2>Apply for Verification</h2><button class="btn ghost sm" onclick="closeModal()">✕</button></div>
+    <p class="meta" style="margin:8px 0 16px">Fill in your details below, pay the exact fee by bank transfer, then upload your receipt.</p>
+    <div class="form-grid">
+      <div class="full"><label>Full legal name</label><input id="vFullName" value="${esc(ME.name)}"/></div>
+      <div><label>ID type</label><select id="vIdType"><option>NIN</option><option>Voter's Card</option><option>Driver's License</option><option>International Passport</option></select></div>
+      <div><label>ID number</label><input id="vIdNumber" placeholder="e.g. 12345678901"/></div>
+      <div class="full"><label>Address</label><input id="vAddress" placeholder="Current residential/business address"/></div>
+      <div class="full">${paymentInstructionsHTML(3999)}</div>
+      ${receiptUploadHTML("vReceipt","vReceiptThumb")}
+      <div class="full"><label>Payment reference (optional)</label><input id="vPayRef" placeholder="Transaction ID, if you have one"/></div>
+      <div class="full"><button class="btn block" onclick="submitVerificationApp()">Submit application</button></div>
+    </div>
+  </div></div>`;
+}
+async function submitVerificationApp(){
+  const fullName=$("vFullName").value.trim(), idNumber=$("vIdNumber").value.trim(), address=$("vAddress").value.trim();
+  if(!fullName||!idNumber||!address) return toast("Please fill in all your details");
+  if(!PENDING_RECEIPT) return toast("Please upload your payment receipt");
+  const v={id:uid(),user_id:ME.id,full_name:fullName,id_type:$("vIdType").value,id_number:idNumber,address,
+    payment_ref:$("vPayRef").value.trim(),receipt_url:PENDING_RECEIPT,amount:3999,status:"pending",created_at:new Date().toISOString()};
+  await apiInsert("verification_requests",v);
+  PENDING_RECEIPT=null; closeModal(); toast("Verification application submitted!"); renderDashboard();
+}
+
+/* ---------- referrals + wallet ---------- */
+const NG_BANKS = [
+  "Access Bank","Citibank Nigeria","Ecobank Nigeria","Fidelity Bank","First Bank of Nigeria",
+  "First City Monument Bank (FCMB)","Globus Bank","Guaranty Trust Bank (GTBank)","Heritage Bank",
+  "Jaiz Bank","Keystone Bank","Optimus Bank","Parallex Bank","Polaris Bank","Premium Trust Bank",
+  "Providus Bank","Signature Bank","Stanbic IBTC Bank","Standard Chartered Bank Nigeria","Sterling Bank",
+  "SunTrust Bank","TAJ Bank","Titan Trust Bank","Union Bank of Nigeria","United Bank for Africa (UBA)",
+  "Unity Bank","Wema Bank","Zenith Bank",
+  "ALAT by Wema (Online Bank)","Carbon (Online Bank)","Eyowo MFB (Online Bank)","FairMoney MFB (Online Bank)",
+  "GoMoney (Online Bank)","Kuda Bank (Online Bank)","Mint MFB / Mintyn (Online Bank)","Moniepoint MFB (Online Bank)",
+  "Opay (Online Bank)","Paga (Online Bank)","PalmPay (Online Bank)","Renmoney MFB (Online Bank)",
+  "Rubies MFB (Online Bank)","Sparkle Microfinance Bank (Online Bank)","VFD Microfinance Bank (Online Bank)",
+  "9PSB — 9Payment Service Bank (Online Bank)"
+];
+function makeReferCode(){ return "SM"+Math.random().toString(36).slice(2,7).toUpperCase(); }
+function referralLink(){ return location.origin+location.pathname+"?ref="+encodeURIComponent(ME.refer_code||""); }
+function myReferrals(){ return DB.referrals.filter(r=>r.referrer_id===ME.id); }
+function walletBalance(){ return Number(ME.wallet_balance||0); }
+function copyReferral(){
+  const msg=`Join me on Skill Mate 🇳🇬 — Nigeria's marketplace for jobs & apprentices! Sign up with my referral link and let's both win: ${referralLink()}`;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(msg).then(()=>toast("Referral message copied — paste it anywhere!"))
+      .catch(()=>toast("Couldn't copy — here's your link: "+referralLink()));
+  } else toast("Here's your link: "+referralLink());
+}
+function referralPanel(){
+  const refs=myReferrals(), bal=walletBalance();
+  return `<div class="panel" style="margin-bottom:20px">
+    <div class="spread"><h3>Refer &amp; Earn 🎁</h3><span class="badge gold">₦${bal.toFixed(0)} balance</span></div>
+    <p class="meta" style="margin:8px 0 12px">Share your personal referral code with friends — you earn <b>₦10</b> for every person who signs up with it. You can withdraw once your balance reaches <b>₦100</b>.</p>
+    <div class="row" style="gap:22px;margin-bottom:12px">
+      <div><b style="font-family:Sora;font-size:20px">${esc(ME.refer_code||"—")}</b><div class="meta">Your referral code</div></div>
+      <div><b style="font-family:Sora;font-size:20px">${refs.length}</b><div class="meta">People referred</div></div>
+    </div>
+    <div class="row">
+      <button class="btn ghost sm" onclick="copyReferral()">📋 Copy referral message</button>
+      <button class="btn ghost sm" onclick="openTransactionsModal()">🧾 Transaction history</button>
+      <button class="btn sm" ${bal>=100?"":"disabled"} onclick="openWithdrawModal()">💸 ${bal>=100?"Withdraw":"Withdraw (need ₦"+(100-bal).toFixed(0)+" more)"}</button>
+    </div>
+  </div>`;
+}
+function txStatusBadge(s){
+  if(s==="approved") return `<span class="badge" style="background:rgba(0,194,168,.14);color:#00846f">✔ Paid</span>`;
+  if(s==="rejected") return `<span class="badge red">✕ Rejected</span>`;
+  return `<span class="badge gold">⏳ Pending</span>`;
+}
+async function openTransactionsModal(){
+  if(!ME) return go("auth");
+  if(SB){
+    try{ const {data}=await SB.from("withdrawals").select("*").eq("user_id",ME.id); if(data){ DB.withdrawals=DB.withdrawals.filter(w=>w.user_id!==ME.id).concat(data); save(); } }
+    catch(e){ /* show whatever we have cached if offline */ }
+  }
+  const rows=(DB.withdrawals||[]).filter(w=>w.user_id===ME.id).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  $("modalRoot").innerHTML=`<div class="modal" onclick="if(event.target===this)closeModal()"><div class="panel" style="width:min(560px,94vw);max-height:82vh;overflow:auto">
+    <div class="spread"><h2>Transaction history</h2><button class="btn ghost sm" onclick="closeModal()">✕</button></div>
+    <p class="meta" style="margin:6px 0 16px">Every withdrawal you've requested, and whether it's still pending or already paid out.</p>
+    ${rows.length?rows.map(w=>`
+      <div class="panel" style="background:var(--surface-2);margin-bottom:10px">
+        <div class="spread"><b style="font-family:Sora;font-size:18px">₦${Number(w.amount).toFixed(0)}</b>${txStatusBadge(w.status)}</div>
+        <div class="meta" style="margin-top:4px">${esc(w.bank_name||"—")} • ${esc(w.account_number||"—")} (${esc(w.account_name||"—")})</div>
+        <div class="meta">${new Date(w.created_at).toLocaleString()}</div>
+        ${w.status==="rejected"&&w.admin_note?`<div class="meta" style="margin-top:4px;color:var(--danger)">Note: ${esc(w.admin_note)}</div>`:""}
+      </div>`).join(""):`<div class="empty">No withdrawal requests yet.</div>`}
+  </div></div>`;
+}
+async function creditReferrer(code, newUserId){
+  if(!code) return;
+  const referrer=DB.users.find(u=>u.refer_code===code);
+  if(!referrer || referrer.id===newUserId) return;
+  const bal=Number(referrer.wallet_balance||0)+10;
+  referrer.wallet_balance=bal; save();
+  const r={id:uid(),referrer_id:referrer.id,referred_id:newUserId,amount:10,created_at:new Date().toISOString()};
+  await apiInsert("referrals",r);
+  if(SB) await SB.from("profiles").update({wallet_balance:bal}).eq("id",referrer.id);
+}
+function openWithdrawModal(){
+  const bal=walletBalance();
+  if(bal<100) return toast("You need at least ₦100 to withdraw");
+  $("modalRoot").innerHTML=`<div class="modal" onclick="if(event.target===this)closeModal()"><div class="panel" style="width:min(460px,94vw)">
+    <div class="spread"><h2>Withdraw earnings</h2><button class="btn ghost sm" onclick="closeModal()">✕</button></div>
+    <p class="meta" style="margin:8px 0 16px">Available balance: <b>₦${bal.toFixed(0)}</b>. Minimum withdrawal is ₦100.</p>
+    <div class="form-grid">
+      <div class="full"><label>Amount to withdraw (₦)</label><input id="wAmount" type="number" min="100" max="${bal}" value="${bal}"/></div>
+      <div class="full"><label>Bank</label><select id="wBank">${NG_BANKS.map(b=>`<option>${esc(b)}</option>`).join("")}</select></div>
+      <div><label>Account number</label><input id="wAcctNo" maxlength="10" placeholder="0123456789"/></div>
+      <div><label>Account name</label><input id="wAcctName" placeholder="As it appears on your account"/></div>
+      <div class="full"><button class="btn block" onclick="submitWithdrawal()">Submit withdrawal request</button></div>
+    </div>
+  </div></div>`;
+}
+async function submitWithdrawal(){
+  const amt=Math.floor(+$("wAmount").value||0), bank=$("wBank").value,
+    acctNo=$("wAcctNo").value.trim(), acctName=$("wAcctName").value.trim();
+  const bal=walletBalance();
+  if(amt<100) return toast("Minimum withdrawal is ₦100");
+  if(amt>bal) return toast("You can't withdraw more than your balance");
+  if(!acctNo||acctNo.length<10) return toast("Enter a valid 10-digit account number");
+  if(!acctName) return toast("Enter the account name");
+  const w={id:uid(),user_id:ME.id,amount:amt,bank_name:bank,account_number:acctNo,account_name:acctName,
+    status:"pending",created_at:new Date().toISOString()};
+  await apiInsert("withdrawals",w);
+  ME.wallet_balance=bal-amt; LS.set("me",ME);
+  const idx=DB.users.findIndex(u=>u.id===ME.id); if(idx>-1) DB.users[idx].wallet_balance=ME.wallet_balance;
+  save();
+  if(SB) await SB.from("profiles").update({wallet_balance:ME.wallet_balance}).eq("id",ME.id);
+  closeModal(); toast("Withdrawal requested — we'll process it within 1-2 business days.");
+  renderDashboard();
+}
+
+/* ---------- get featured (per-listing, open to everyone) ---------- */
+let FEATURE_TARGET=null;
+function openFeatureModal(rid){
+  FEATURE_TARGET=rid; const r=DB.requests.find(x=>x.id===rid); if(!r) return;
+  PENDING_RECEIPT=null;
+  $("modalRoot").innerHTML=`<div class="modal" onclick="if(event.target===this)closeModal()"><div class="panel" style="width:min(460px,94vw)">
+    <div class="spread"><h2>Get Featured</h2><button class="btn ghost sm" onclick="closeModal()">✕</button></div>
+    <p class="meta" style="margin:8px 0 16px">Feature "${esc(r.title)}" at the top of Browse and Home. Anyone can apply — verification isn't required.</p>
+    ${paymentInstructionsHTML(1999)}
+    ${receiptUploadHTML("fReceipt","fReceiptThumb")}
+    <label style="display:block;margin-top:14px">Payment reference (optional)</label>
+    <input id="featPayRef" placeholder="Transaction ID, if you have one" style="width:100%;margin:6px 0 16px"/>
+    <button class="btn block" onclick="submitFeatureApp()">Submit for review</button>
+  </div></div>`;
+}
+async function submitFeatureApp(){
+  if(!PENDING_RECEIPT) return toast("Please upload your payment receipt");
+  const ref=$("featPayRef").value.trim();
+  const f={id:uid(),request_id:FEATURE_TARGET,user_id:ME.id,payment_ref:ref,receipt_url:PENDING_RECEIPT,amount:1999,status:"pending",created_at:new Date().toISOString()};
+  await apiInsert("featured_requests",f);
+  PENDING_RECEIPT=null; closeModal(); toast("Submitted! We'll feature your listing once payment is confirmed."); renderDashboard();
+}
+
+/* ---------- renderers ---------- */
+function activeRequests(){
+  const rows = allRequestsMerged().filter(r=>r.status!=="removed"&&r.status!=="cancelled");
+  const ownerVerified = (r) => { const o = DB.users.find(u=>u.id===r.user_id); return !!(o && o.verified); };
+  return rows.slice().sort((a,b)=>{
+    const av=ownerVerified(a), bv=ownerVerified(b);
+    if(av!==bv) return av?-1:1;               // verified-owner listings first
+    if(!!a.featured!==!!b.featured) return a.featured?-1:1; // then featured
+    return new Date(b.created_at)-new Date(a.created_at);   // then newest first
+  });
+}
+function renderHome(){
+  $("skillGrid").innerHTML=SKILLS.slice(0,18).map(s=>{
+    const c=activeRequests().filter(r=>r.skill===s.n).length;
+    return `<div class="skill" onclick="$('fSkill').value='${s.n}';go('browse')">
+      <div class="thumb" style="background:linear-gradient(135deg,rgba(47,94,255,.14),rgba(0,194,168,.14));display:grid;place-items:center;font-size:26px">${s.e}</div>
+      <div class="info"><b>${s.n}</b><span>${c} job${c===1?"":"s"} open</span></div></div>`}).join("");
+  const l=activeRequests().slice(0,6);
+  $("latestGrid").innerHTML = l.length?l.map(card).join(""):`<div class="empty">No opportunities yet — be the first to post one.</div>`;
+  $("sOpps").textContent=activeRequests().length; $("sBiz").textContent=DB.users.filter(u=>u.role==="business").length;
+  $("sSkills").textContent=SKILLS.length;
+}
+function heroSearch(){ $("fSkill").value=$("hSkill").value; $("fState").value=$("hState").value; populateCities("fState","fCity",true); go("browse") }
+/* Small Levenshtein distance — used so a typo like "hairdresing" or "fone repair"
+   still finds "Hairdressing" / "Phone Repair" instead of returning nothing. */
+function levenshtein(a,b){
+  if(a===b) return 0;
+  const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,i)=>i);
+  for(let i=1;i<=m;i++){
+    const cur=[i];
+    for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    prev=cur;
+  }
+  return prev[n];
+}
+// How well does `query` match `text`? 0 = no match. Rewards exact substrings
+// highest, then falls back to per-word fuzzy similarity so typos and partial
+// words still surface relevant results instead of an empty grid.
+function searchScore(query,text){
+  if(!query) return 1;
+  text=String(text||"").toLowerCase();
+  if(text.includes(query)) return 100 - Math.abs(text.length-query.length)*0.2;
+  const qWords=query.split(/\s+/).filter(Boolean), tWords=text.split(/\s+/).filter(Boolean);
+  let score=0;
+  for(const qw of qWords){
+    let best=0;
+    for(const tw of tWords){
+      if(tw.includes(qw)||qw.includes(tw)){ best=Math.max(best,10); continue; }
+      const dist=levenshtein(qw,tw), maxLen=Math.max(qw.length,tw.length);
+      const sim=1-dist/maxLen;
+      if(sim>=0.6) best=Math.max(best,sim*10);
+    }
+    score+=best;
+  }
+  return score;
+}
+function renderBrowse(){
+  const s=$("fSkill").value.trim().toLowerCase(),st=$("fState").value,c=$("fCity").value,
+    e=$("fExp").value,t=$("fType").value,creator=$("fCreator")?.checked;
+  let list=activeRequests().filter(r=>
+    (!st||r.state===st)&&(!c||r.city===c)&&(!e||r.experience===e)&&(!t||r.type===t)&&(!creator||r.content_creator_opportunity));
+  if(s){
+    list=list.map(r=>({r,score:Math.max(
+        searchScore(s,r.skill), searchScore(s,r.title), searchScore(s,r.description)*0.6
+      )})).filter(x=>x.score>2).sort((a,b)=>b.score-a.score).map(x=>x.r);
+  }
+  $("browseGrid").innerHTML=list.length?list.map(card).join(""):`<div class="empty">No results. Try widening your filters or a different search word.</div>`;
+}
+
+/* ---------- map ---------- */
+let MAP,MARKERS=[],MYPOS=null;
+function initMap(){
+  if(!MAP){
+    MAP=L.map("map").setView([9.08,8.67],6);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {attribution:"© OpenStreetMap contributors",maxZoom:19}).addTo(MAP);
+  }
+  setTimeout(()=>MAP.invalidateSize(),100); renderNearby();
+  if(!AUTO_LOCATE_TRIED){ AUTO_LOCATE_TRIED=true; locateMe(true); }
+}
+let AUTO_LOCATE_TRIED=false;
+function locateMe(silent){
+  if(!navigator.geolocation) return silent||toast("Your browser doesn't support location");
+  if(window.isSecureContext===false) return silent||toast("Location needs the site to be opened over HTTPS");
+  if(!silent) toast("Getting your location…");
+  navigator.geolocation.getCurrentPosition(p=>{
+    MYPOS=[p.coords.latitude,p.coords.longitude]; MAP.setView(MYPOS,11);
+    L.circleMarker(MYPOS,{radius:9,color:"#2f5eff",fillOpacity:.9}).addTo(MAP).bindPopup("You are here");
+    renderNearby();
+    if(!silent) toast("Location found ✅");
+  },(err)=>{
+    if(silent) return; // auto-attempt on page load fails quietly — the manual button still works
+    if(err.code===1) toast("Location permission denied — allow it in your browser/site settings, or pick a state instead");
+    else if(err.code===2) toast("Couldn't determine your location — pick a state instead");
+    else if(err.code===3) toast("Location request timed out — try again or pick a state instead");
+    else toast("Could not get location — pick a state instead");
+  },{enableHighAccuracy:true,timeout:12000,maximumAge:60000});
+}
+function jumpState(){ const s=$("nState").value; if(!s)return; MYPOS=STATES[s]; MAP.setView(MYPOS,10); renderNearby() }
+function renderNearby(){
+  if(!MAP)return;
+  MARKERS.forEach(m=>MAP.removeLayer(m)); MARKERS=[];
+  const rad=+$("nRadius").value;
+  let list=activeRequests().map(r=>({...r,dist:(MYPOS&&r.lat!=null&&r.lng!=null)?km(MYPOS[0],MYPOS[1],r.lat,r.lng):null}));
+  if(MYPOS) list=list.filter(r=>r.dist!=null&&r.dist<=rad).sort((a,b)=>a.dist-b.dist);
+  list.forEach(r=>{
+    if(r.lat==null||r.lng==null) return; // sample/legacy listings without coordinates skip the map pin
+    const m=L.marker([r.lat,r.lng]).addTo(MAP)
+      .bindPopup(`<b>${esc(r.title)}</b><br>${esc(r.city)}, ${esc(r.state)}<br>${skillEmoji(r.skill)} ${esc(r.skill)}`);
+    m.on("click",()=>{}); MARKERS.push(m);
+  });
+  $("nCount").textContent = MYPOS?`— ${list.length} within ${rad>9999?"Nigeria":rad+" km"}`:"— showing all (set your location)";
+  $("nearbyGrid").innerHTML=list.length?list.map(r=>card(r).replace("</h3>",
+    `</h3>${r.dist!=null?`<div class="badge">${r.dist.toFixed(1)} km away</div>`:""}`)).join("")
+    :`<div class="empty">Nothing found in this radius.</div>`;
+}
+
+/* ---------- dashboard ---------- */
+// Same public card, plus owner-only controls (cancel / get featured) appended below it.
+function dashListingCard(r){
+  const featReq=DB.featured_requests.find(f=>f.request_id===r.id && f.status==="pending");
+  const featBtn = r.featured ? `<span class="badge gold">★ Featured</span>`
+    : featReq ? `<span class="badge gold">Feature pending review</span>`
+    : (r.status==="active" ? `<button class="btn ghost sm" onclick="openFeatureModal('${r.id}')">🌟 Get Featured — ₦1,999</button>` : "");
+  const cancelBtn = r.status==="cancelled" ? `<span class="badge grey">Cancelled by you</span>`
+    : r.status==="removed" ? `<span class="badge red">Removed by admin</span>`
+    : `<button class="btn ghost sm" onclick="cancelListing('${r.id}')">Cancel listing</button>`;
+  const extra=`<div class="row" style="margin:0 15px 15px">${featBtn}${cancelBtn}</div>`;
+  return card(r).replace("</article>",extra+"</article>");
+}
+function renderDashboard(){
+  if(!ME){ $("dashBody").innerHTML=`<div class="empty">Please log in to see your dashboard.<br><br><button class="btn" onclick="go('auth')">Log in</button></div>`; return }
+  const mine=DB.requests.filter(r=>r.user_id===ME.id);
+  const apps=DB.applications.filter(a=>a.user_id===ME.id);
+  const received=DB.applications.filter(a=>mine.some(r=>r.id===a.request_id));
+  const saved=DB.saved.filter(s=>s.user_id===ME.id).map(s=>DB.requests.find(r=>r.id===s.request_id)).filter(Boolean);
+  $("dashBody").innerHTML=`
+    <div class="panel spread" style="margin-bottom:20px;flex-wrap:wrap">
+      <div class="row" style="gap:14px"><img class="avatar" style="width:64px;height:64px" src="${esc(ME.avatar)}"/>
+        <div><h2>${esc(ME.business_name||ME.name)}</h2>
+          <div class="meta">${esc(ME.role==="business"?"Business / Artisan":"Apprentice / Job seeker")} • ${esc(ME.city)}, ${esc(ME.state)} • ${esc(ME.skill)}</div></div></div>
+      <div class="row"><button class="btn ghost sm" onclick="go('profile','${ME.id}')">My public profile</button>
+      <button class="btn ghost sm" onclick="openEditProfile()">✎ Edit profile</button>
+      <button class="btn sm" onclick="go('post')">+ Post request</button></div>
+    </div>
+    ${verificationPanel()}
+    ${referralPanel()}
+    <h3 style="margin-bottom:12px">My requests (${mine.length})</h3>
+    <div class="grid">${mine.length?mine.map(dashListingCard).join(""):`<div class="empty">You haven't posted anything yet.</div>`}</div>
+    <h3 style="margin:26px 0 12px">Applications I sent (${apps.length})</h3>
+    <div class="grid">${apps.length?apps.map(a=>appRow(a,true)).join(""):`<div class="empty">No applications yet.</div>`}</div>
+    <h3 style="margin:26px 0 12px">Applications received (${received.length})</h3>
+    <div class="grid">${received.length?received.map(a=>appRow(a,false)).join(""):`<div class="empty">No one has applied yet.</div>`}</div>
+    <h3 style="margin:26px 0 12px">Saved opportunities (${saved.length})</h3>
+    <div class="grid">${saved.length?saved.map(card).join(""):`<div class="empty">Nothing saved yet.</div>`}</div>`;
+}
+function appRow(a,sent){
+  const r=DB.requests.find(x=>x.id===a.request_id)||{title:"Removed listing"};
+  const u=DB.users.find(x=>x.id===a.user_id)||{name:"User",avatar:""};
+  const media=(a.media||[]).map(m=>m.type&&m.type.startsWith("video")
+    ?`<video src="${esc(m.url)}" controls></video>`:`<img src="${esc(m.url)}"/>`).join("");
+  return `<div class="card"><div class="body">
+    <div class="row" style="gap:10px"><img class="avatar" src="${esc(sent?"":u.avatar)}" style="${sent?"display:none":""}"/>
+      <b>${esc(sent?r.title:u.name)}</b><span class="badge ${a.status==="accepted"?"":"grey"}">${esc(a.status)}</span></div>
+    ${sent?"":`<div class="meta">Applied to: ${esc(r.title)}</div>`}
+    <p class="meta">${esc(a.message)}</p>
+    <div class="meta">📞 ${esc(a.phone||"—")} ${a.link?`• <a style="color:var(--primary-2)" target="_blank" href="${esc(a.link)}">link</a>`:""}</div>
+    <div class="thumbs">${media}</div>
+    ${sent?"":`<div class="row"><button class="btn sm" onclick="setApp('${a.id}','accepted')">Accept</button>
+      <button class="btn ghost sm" onclick="setApp('${a.id}','rejected')">Reject</button></div>`}
+  </div></div>`;
+}
+function setApp(id,st){
+  const a=DB.applications.find(x=>x.id===id); if(!a)return; a.status=st; save();
+  if(SB) SB.from("applications").update({status:st}).eq("id",id);
+  toast("Application "+st); renderDashboard();
+}
+
+
+/* ================= SOCIAL / CONNECT DATA + UI ================= */
+async function loadSocialData(){
+  if(!SB){ Object.keys(DB).filter(k=>k.startsWith("social_")).forEach(k=>DB[k]=LS.get(k,DB[k])); return; }
+  const qs=await Promise.all([
+    SB.from("social_videos").select("*").order("created_at",{ascending:false}),
+    SB.from("social_updates").select("*").order("created_at",{ascending:false}),
+    SB.from("social_follows").select("*"), SB.from("social_likes").select("*"), SB.from("social_saves").select("*"), SB.from("social_comments").select("*").order("created_at",{ascending:true})
+  ]);
+  const names=["social_videos","social_updates","social_follows","social_likes","social_saves","social_comments"];
+  qs.forEach((q,i)=>{ if(!q.error) DB[names[i]]=q.data||[]; });
+}
+function socialUser(id){ return DB.users.find(u=>u.id===id)||{id,name:"Skill Mate User",avatar:"https://api.dicebear.com/7.x/initials/svg?seed=User",verified:false,bio:"",skill:""}; }
+function socialUrl(u){ return u.avatar||"https://api.dicebear.com/7.x/initials/svg?seed="+encodeURIComponent(u.name||"User"); }
+function socialCount(kind,id){ const arr=DB[kind]||[]; return arr.filter(x=>x.content_id===id).length; }
+function socialLiked(type,id){ return !!ME && (DB.social_likes||[]).some(x=>x.user_id===ME.id&&x.content_type===type&&x.content_id===id); }
+function socialSaved(type,id){ return !!ME && (DB.social_saves||[]).some(x=>x.user_id===ME.id&&x.content_type===type&&x.content_id===id); }
+function socialFollowing(id){ return !!ME && (DB.social_follows||[]).some(x=>x.follower_id===ME.id&&x.following_id===id); }
+function socialFormatCount(n){n=Number(n||0);return n>=1000000?(n/1000000).toFixed(1).replace('.0','')+'M':n>=1000?(n/1000).toFixed(1).replace('.0','')+'K':String(n)}
+async function socialInsert(table,row){ if(SB){const {error}=await SB.from(table).insert(row);if(error)throw error;} DB[table].push(row);save(); }
+async function socialDelete(table,match){
+  if(SB){let q=SB.from(table).delete();Object.entries(match).forEach(([k,v])=>q=q.eq(k,v));const {error}=await q;if(error)throw error;}
+  DB[table]=DB[table].filter(x=>!Object.entries(match).every(([k,v])=>x[k]===v));save();
+}
+async function socialToggleFollow(id){
+  if(!ME)return go("auth"); if(ME.id===id)return toast("That's your profile");
+  const m={follower_id:ME.id,following_id:id};
+  try{ if(socialFollowing(id)) await socialDelete("social_follows",m); else await socialInsert("social_follows",m); renderSocial(); }catch(e){toast("Could not update follow");}
+}
+async function socialToggle(type,id){
+  if(!ME)return go("auth"); const table=type==="like"?"social_likes":"social_saves"; const contentType=id.startsWith("upd_")?"update":"video"; const match={user_id:ME.id,content_type:contentType,content_id:id};
+  try{ if((type==="like"?socialLiked: socialSaved)(contentType,id)) await socialDelete(table,match); else await socialInsert(table,{...match,created_at:new Date().toISOString()}); renderSocial(); }catch(e){toast("Could not update");}
+}
+function socialCommentCount(type,id){return socialCount("social_comments",id)}
+function socialCommentPrompt(type,id){ if(!ME)return go("auth"); const text=prompt("Write a comment"); if(!text||!text.trim())return; const row={id:uid(),user_id:ME.id,content_type:type,content_id:id,body:text.trim(),created_at:new Date().toISOString()}; socialInsert("social_comments",row).then(()=>renderSocial()).catch(()=>toast("Could not post comment")); }
+function socialVideoCard(v,index){
+  const u=socialUser(v.user_id), liked=socialLiked("video",v.id), saved=socialSaved("video",v.id), following=socialFollowing(v.user_id);
+  const comments=socialCommentCount("video",v.id), likes=socialCount("social_likes",v.id), saves=socialCount("social_saves",v.id);
+  const isTikTok = v.source==="tiktok" && v.tiktok_video_id;
+  const player = isTikTok
+    ? `<iframe class="social-tiktok-embed" data-tiktok-player src="https://www.tiktok.com/player/v1/${esc(v.tiktok_video_id)}?music_info=0&description=0&controls=0&loop=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`
+    : `<video class="social-video" src="${esc(v.media_url)}" playsinline loop autoplay preload="auto" onclick="socialVideoTap(this)"></video>`;
+  return `<article class="social-video-wrap" data-video-id="${esc(v.id)}">
+    ${player}<div class="social-video-shade"></div><div class="social-playflash"><div class="playmark">▶</div></div>
+    <div class="social-progress">${[0,1,2,3,4].map(i=>`<i class="${i===0?'active':''}"></i>`).join('')}</div>
+    ${isTikTok?`<div class="social-tiktok-badge">🎬 via TikTok</div>`:''}
+    <div class="social-video-head"><img class="avatar" style="cursor:pointer" onclick="openSocialUserProfile('${esc(u.id)}')" src="${esc(socialUrl(u))}"/><div style="cursor:pointer" onclick="openSocialUserProfile('${esc(u.id)}')"><b>${esc(u.business_name||u.name)} ${u.verified?'✓':''}</b><br><small>@${esc((u.name||'user').toLowerCase().replace(/\\s+/g,''))} · ${timeAgo(v.created_at)}</small></div><button class="social-more">⋮</button></div>
+    <div class="social-actions">
+      <button class="social-action" onclick="socialToggleFollow('${esc(u.id)}')"><div class="ico">＋</div><span>${following?'Following':'Follow'}</span></button>
+      <button class="social-action ${liked?'liked':''}" onclick="socialToggle('like','${esc(v.id)}')"><div class="ico">♥</div><span>${socialFormatCount(likes)}</span></button>
+      <button class="social-action" onclick="openSocialComments('video','${esc(v.id)}')"><div class="ico">💬</div><span>${socialFormatCount(comments)}</span></button>
+      <button class="social-action ${saved?'saved':''}" onclick="socialToggle('save','${esc(v.id)}')"><div class="ico">🔖</div><span>${socialFormatCount(saves)}</span></button>
+      <button class="social-action" onclick="navigator.share?navigator.share({title:'Skill Mate video',url:location.href}):toast('Share link copied')"><div class="ico">↗</div><span>Share</span></button>
+    </div>
+    <div class="social-caption">${v.topic?`<span class="tag">${esc(v.topic)}</span>`:''}<h3>${esc(v.caption||'')}</h3><p>${esc(v.description||'')}</p>${v.hashtags?`<div class="hash">${esc(v.hashtags)}</div>`:''}</div>
+    <div class="social-playerbar"><i></i></div>
+  </article>`;
+}
+function renderSocialVideos(){
+  const box=$("socialVideos"); if(!box)return; const rows=(DB.social_videos||[]).filter(v=>v.status!=="removed");
+  box.innerHTML=rows.length?rows.map(socialVideoCard).join(""):`<div class="social-empty"><h3>No videos yet</h3><p>Be the first Skill Mate user to share a useful skill video.</p>${ME?`<button class="btn" onclick="openSocialUpload()">Upload a video</button>`:''}</div>`;
+  box.querySelectorAll("video.social-video").forEach(v=>{
+    if('IntersectionObserver' in window){new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.play().catch(()=>{});else e.target.pause();}),{threshold:.65}).observe(v)}
+  });
+  box.querySelectorAll("iframe[data-tiktok-player]").forEach(f=>{
+    if('IntersectionObserver' in window){new IntersectionObserver(es=>es.forEach(e=>{
+      tiktokPlayerCommand(f, e.isIntersecting?'play':'pause');
+    }),{threshold:.65}).observe(f)}
+  });
+}
+// TikTok's embed player is controlled via postMessage — see
+// https://developers.tiktok.com/docs/en/embed-player
+function tiktokPlayerCommand(iframe,type,value){
+  try{ iframe.contentWindow.postMessage({type,value:value ?? ""},"https://www.tiktok.com"); }catch(e){}
+}
+function socialTikTokTap(wrapEl){
+  const iframe=wrapEl.querySelector('[data-tiktok-player]'); if(!iframe)return;
+  const playing = wrapEl.dataset.playing!=="0";
+  tiktokPlayerCommand(iframe, playing?'pause':'play');
+  wrapEl.dataset.playing = playing?"0":"1";
+  const flash=wrapEl.querySelector('.social-playflash'); const mark=flash?.querySelector('.playmark');
+  if(flash&&mark){mark.textContent=playing?'Ⅱ':'▶';flash.classList.remove('show');void flash.offsetWidth;flash.classList.add('show');}
+}
+let SOCIAL_PROFILE_TAB="videos";
+let SOCIAL_UPDATE_FILTER="all";
+let SOCIAL_VIEWING_ID=null;
+function openSocialUserProfile(id){
+  if(!ME)return go('auth');
+  socialGo('profile',id);
+}
+function renderSocialProfile(){
+  const box=$("socialProfile"); if(!box)return;
+  const u=SOCIAL_VIEWING_ID?(DB.users.find(x=>x.id===SOCIAL_VIEWING_ID)||ME):ME;
+  if(!u){box.innerHTML='<div class="social-empty">Log in to use your profile.</div>';return;}
+  const isMe=!ME||u.id===ME.id;
+  const videos=(DB.social_videos||[]).filter(v=>v.user_id===u.id&&v.status!=="removed");
+  const updates=(DB.social_updates||[]).filter(v=>v.user_id===u.id&&v.status!=="removed");
+  const savedVideos=videos.filter(v=>socialSaved('video',v.id));
+  let content='';
+  if(SOCIAL_PROFILE_TAB==='updates'){
+    content=updates.length?updates.map(x=>`<article class="social-update"><div class="social-update-body">${esc(x.body)}</div>${x.hashtags?`<div class="hash">${esc(x.hashtags)}</div>`:''}</article>`).join(''):'<div class="social-empty" style="padding:35px">No updates yet.</div>';
+    content=`<div class="social-updates" style="padding:12px 0">${content}</div>`;
+  }else{
+    const grid=(SOCIAL_PROFILE_TAB==='saved'&&isMe)?savedVideos:videos;
+    content=grid.length?grid.map(v=>{
+      const isTT = v.source==="tiktok";
+      const media = isTT ? `<img class="gridthumb" src="${esc(v.thumbnail_url||'')}" loading="lazy"/>` : `<video src="${esc(v.media_url)}" muted></video>`;
+      return `<div class="social-grid-item" onclick="socialGo('videos')">${media}<div class="g"></div>${isTT?'<div class="tt">TikTok</div>':''}<div class="t">${esc(v.caption||'Skill Mate video')}</div><div class="v">▶ ${socialFormatCount(v.views_count||0)}</div></div>`;
+    }).join(''):`<div class="social-empty" style="grid-column:1/-1;padding:35px">${SOCIAL_PROFILE_TAB==='saved'?'No saved videos yet.':'No videos yet.'}</div>`;
+    content=`<div class="social-grid">${content}</div>`;
+  }
+  const actions=isMe
+    ? `<button class="btn ghost sm" onclick="navigator.share?navigator.share({title:'Skill Mate profile',url:location.href}):toast('Share link copied')">↗</button><button class="btn ghost sm" onclick="openEditProfile()">Edit Profile</button><button class="social-upload" onclick="openSocialUpload()">＋ Video</button>`
+    : `<button class="btn ghost sm" onclick="socialGo('profile')">← Back</button><button class="btn ${socialFollowing(u.id)?'ghost':''} sm" onclick="socialToggleFollow('${esc(u.id)}');renderSocialProfile()">${socialFollowing(u.id)?'Following':'Follow'}</button>`;
+  const avatarEdit = isMe ? `<button class="social-upload" style="position:absolute;right:-2px;bottom:-2px;width:32px;height:32px;padding:0;border-radius:50%" onclick="openEditProfile()" title="Edit profile photo">✎</button>` : '';
+  box.innerHTML=`<div class="social-profile"><div class="social-profile-head"><div style="position:relative"><img class="social-profile-avatar" src="${esc(socialUrl(u))}"/>${avatarEdit}</div><div><h2>${esc(u.business_name||u.name)} ${u.verified?'✓':''}</h2><div class="social-handle">@${esc((u.name||'user').toLowerCase().replace(/\s+/g,''))}</div><div class="badge ok" style="display:inline-block;margin-top:6px">💎 ${esc(u.skill||'Skill Mate')}</div></div><div class="social-profile-actions">${actions}</div></div>
+  <div class="social-stats"><div><b>${videos.length+updates.length}</b><span>Posts</span></div><button class="social-follow-count" onclick="openSocialUsers('followers','${esc(u.id)}')"><b>${socialFormatCount(socialFollowerCount(u.id))}</b><span>Followers</span></button><button class="social-follow-count" onclick="openSocialUsers('following','${esc(u.id)}')"><b>${socialFormatCount((DB.social_follows||[]).filter(f=>f.follower_id===u.id).length)}</b><span>Following</span></button></div>
+  <div class="social-bio">${esc(u.bio||'Sharing my journey and helping others grow.')}<br>${esc(u.skill||'Skill Mate user')}</div>
+  <div class="social-content-tabs"><button class="${SOCIAL_PROFILE_TAB==='videos'?'active':''}" onclick="SOCIAL_PROFILE_TAB='videos';renderSocialProfile()">Videos</button><button class="${SOCIAL_PROFILE_TAB==='updates'?'active':''}" onclick="SOCIAL_PROFILE_TAB='updates';renderSocialProfile()">Updates</button>${isMe?`<button class="${SOCIAL_PROFILE_TAB==='saved'?'active':''}" onclick="SOCIAL_PROFILE_TAB='saved';renderSocialProfile()">Saved</button>`:''}</div>${content}</div>`;
+}
+function renderSocialUpdates(){
+  const box=$("socialUpdates"); if(!box)return; let rows=(DB.social_updates||[]).filter(x=>x.status!=="removed");
+  if(SOCIAL_UPDATE_FILTER==='following'&&ME) rows=rows.filter(x=>socialFollowing(x.user_id));
+  if(SOCIAL_UPDATE_FILTER==='mentions'&&ME) rows=rows.filter(x=>String(x.body||'').toLowerCase().includes('@'+String(ME.name||'').toLowerCase().replace(/\\s+/g,'')));
+  if(SOCIAL_UPDATE_FILTER==='likes'&&ME) rows=rows.filter(x=>socialLiked('update',x.id));
+  box.innerHTML=`<div class="social-updates">${ME?`<div class="social-compose"><img class="avatar" src="${esc(socialUrl(ME))}"/><button onclick="openSocialUpdateComposer()">Share an update...</button></div>`:''}<div class="row" style="margin-bottom:12px">${[['all','All'],['following','Following'],['mentions','Mentions'],['likes','Likes']].map(([k,l])=>`<button class="btn sm ${SOCIAL_UPDATE_FILTER===k?'':'ghost'}" onclick="SOCIAL_UPDATE_FILTER='${k}';renderSocialUpdates()">${l}</button>`).join('')}</div>${rows.length?rows.map(x=>{const u=socialUser(x.user_id);const liked=socialLiked('update',x.id);return `<article class="social-update"><div class="social-update-head"><img class="avatar" src="${esc(socialUrl(u))}"/><div><b>${esc(u.business_name||u.name)} ${u.verified?'✓':''}</b><div class="meta">@${esc((u.name||'user').toLowerCase().replace(/\\s+/g,''))} · ${timeAgo(x.created_at)}</div></div></div><div class="social-update-body">${esc(x.body)}</div>${x.hashtags?`<div class="hash">${esc(x.hashtags)}</div>`:''}<div class="social-update-actions"><button class="${liked?'active':''}" onclick="socialToggle('like','${esc(x.id)}')">♥ ${socialCount('social_likes',x.id)}</button><button onclick="openSocialComments('update','${esc(x.id)}')">◯ ${socialCommentCount('update',x.id)}</button><button onclick="socialToggle('save','${esc(x.id)}')">▮ ${socialCount('social_saves',x.id)}</button></div></article>`}).join(''):'<div class="social-empty"><h3>No updates yet</h3><p>Follow creators and share your first update.</p></div>'}</div>`;
+}
+function socialFollowerCount(id){
+  const actual=(DB.social_follows||[]).filter(x=>x.following_id===id).length;
+  const u=DB.users.find(x=>x.id===id);
+  const override=u&&u.social_followers_override;
+  return override===null||override===undefined||override===""?actual:Number(override)||0;
+}
+function exitSocial(){go('home');}
+function socialVideoTap(v){
+  const flash=v.closest('.social-video-wrap')?.querySelector('.social-playflash');
+  const mark=flash?.querySelector('.playmark');
+  if(v.paused){v.muted=false;v.play().catch(()=>{});if(flash&&mark){mark.textContent='▶';flash.classList.remove('show');void flash.offsetWidth;flash.classList.add('show');}}
+  else{v.pause();if(flash&&mark){mark.textContent='Ⅱ';flash.classList.remove('show');void flash.offsetWidth;flash.classList.add('show');}}
+}
+function closeSocialSheet(){const x=$("socialSheet");if(x)x.remove();}
+function openSocialUsers(kind,id){
+  const ids=(DB.social_follows||[]).filter(x=>kind==='followers'?x.following_id===id:x.follower_id===id).map(x=>kind==='followers'?x.follower_id:x.following_id);
+  const list=ids.map(socialUser);
+  const title=kind==='followers'?'Followers':'Following';
+  const extra=kind==='followers'?Math.max(0,socialFollowerCount(id)-list.length):0;
+  $("modalRoot").insertAdjacentHTML('beforeend',`<div id="socialSheet" class="social-sheet" onclick="if(event.target===this)closeSocialSheet()"><div class="social-sheet-box"><div class="social-sheet-head"><div><b>${title}</b><div class="meta">${socialFormatCount(kind==='followers'?socialFollowerCount(id):list.length)} people</div></div><button class="btn ghost sm" onclick="closeSocialSheet()">✕</button></div><div class="social-sheet-body">${list.length?list.map(u=>`<div class="social-user-row"><img class="avatar" src="${esc(socialUrl(u))}"/><div style="flex:1;min-width:0"><b>${esc(u.business_name||u.name)} ${u.verified?'✓':''}</b><div class="meta">@${esc((u.name||'user').toLowerCase().replace(/\s+/g,''))}</div></div>${ME&&u.id!==ME.id?`<button class="btn ghost sm" onclick="socialToggleFollow('${esc(u.id)}');closeSocialSheet()">${socialFollowing(u.id)?'Following':'Follow'}</button>`:''}</div>`).join(''):`<div class="social-empty">No ${title.toLowerCase()} yet.</div>`}${extra?`<div class="meta" style="padding:10px 2px">${socialFormatCount(extra)} additional follower count is managed by the account owner/admin.</div>`:''}</div></div></div>`);
+}
+function openSocialComments(type,id){
+  if(!ME)return go('auth');
+  const comments=(DB.social_comments||[]).filter(x=>x.content_type===type&&x.content_id===id).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  $("modalRoot").insertAdjacentHTML('beforeend',`<div id="socialSheet" class="social-sheet" onclick="if(event.target===this)closeSocialSheet()"><div class="social-sheet-box"><div class="social-sheet-head"><div><b>Comments</b><div class="meta">${comments.length} comments</div></div><button class="btn ghost sm" onclick="closeSocialSheet()">✕</button></div><div id="socialCommentsBody" class="social-sheet-body">${comments.length?comments.map(c=>{const u=socialUser(c.user_id);return `<div class="social-comment"><img class="avatar" src="${esc(socialUrl(u))}"/><div class="social-comment-body"><b>${esc(u.business_name||u.name)} ${u.verified?'✓':''}</b><div class="meta">${timeAgo(c.created_at)}</div><p>${esc(c.body)}</p></div></div>`}).join(''):`<div class="social-empty">No comments yet. Be the first to say something.</div>`}</div><div class="social-sheet-input"><input id="socialCommentInput" placeholder="Add a comment…" onkeydown="if(event.key==='Enter'){event.preventDefault();submitSocialComment('${esc(type)}','${esc(id)}')}"/><button class="btn" onclick="submitSocialComment('${esc(type)}','${esc(id)}')">Post</button></div></div></div>`);
+}
+async function submitSocialComment(type,id){const input=$("socialCommentInput"),text=input?.value.trim();if(!text)return;if(!ME)return go('auth');const row={id:uid(),user_id:ME.id,content_type:type,content_id:id,body:text,created_at:new Date().toISOString()};try{await socialInsert('social_comments',row);closeSocialSheet();renderSocial();openSocialComments(type,id);}catch(e){toast('Could not post comment');}}
+function renderSocial(){renderSocialVideos();renderSocialProfile();renderSocialUpdates();}
+function socialGo(tab,viewUserId){
+  if(tab==="chat")return openMessages();
+  if(tab==="profile"&&!ME)return go('auth');
+  if(tab==="profile") SOCIAL_VIEWING_ID = viewUserId || null;
+  ["videos","profile","updates"].forEach(x=>$("social"+x[0].toUpperCase()+x.slice(1)).classList.toggle('hidden',x!==tab));
+  document.querySelectorAll('[data-social-nav]').forEach(x=>x.classList.toggle('active',x.dataset.socialNav===tab));
+  renderSocial();
+  if(tab==='videos'){const feed=$("socialVideos");if(feed)feed.scrollTop=0;requestAnimationFrame(()=>{const first=feed?.querySelector('.social-video');if(first){first.muted=false;first.play().catch(()=>{});}});}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+let SOCIAL_UPLOAD_TAB="device";
+function openSocialUpload(tab){
+  if(!ME)return go('auth');
+  if(tab) SOCIAL_UPLOAD_TAB=tab;
+  const t=SOCIAL_UPLOAD_TAB;
+  const deviceForm=`<input id="svFile" type="file" accept="video/*" style="width:100%;margin:10px 0"/><input id="svCaption" placeholder="Caption" style="width:100%;margin:0 0 10px"/><input id="svTags" placeholder="#WebDev #Learning" style="width:100%;margin:0 0 10px"/><input id="svTopic" placeholder="Topic (e.g. Web Development)" style="width:100%;margin:0 0 14px"/><button class="btn block" onclick="submitSocialVideo()">Publish video</button>`;
+  const tiktokForm=`<input id="ttLink" placeholder="Paste a TikTok video link…" style="width:100%;margin:10px 0 12px"/><button class="btn block" onclick="submitTikTokImport()">Import from TikTok</button><p class="meta" style="margin-top:12px;line-height:1.5">The video keeps playing straight from TikTok — nothing is uploaded to Skill Mate, and it still counts as a real view on TikTok.</p>`;
+  $("modalRoot").innerHTML=`<div class="modal" onclick="if(event.target===this)closeModal()"><div class="panel" style="width:min(560px,94vw)"><div class="spread"><h2>Add a video</h2><button class="btn ghost sm" onclick="closeModal()">✕</button></div><p class="meta">Share a useful skill, project, tip or learning moment with the Skill Mate community.</p>
+  <div class="social-upload-tabs"><button class="${t==='device'?'active':''}" onclick="openSocialUpload('device')">Upload from device</button><button class="${t==='tiktok'?'active':''}" onclick="openSocialUpload('tiktok')">Import from TikTok</button></div>
+  ${t==='device'?deviceForm:tiktokForm}</div></div>`;
+}
+async function submitSocialVideo(){
+  const f=$("svFile")?.files?.[0]; if(!f)return toast('Choose a video'); if(!f.type.startsWith('video/'))return toast('Please choose a video file'); if(f.size>40*1024*1024)return toast('Video must be 40MB or less');
+  toast('Uploading video…'); try{const m=await uploadMedia(f,'social');const row={id:'vid_'+uid(),user_id:ME.id,media_id:m.id,media_url:m.url,mime:f.type,source:'native',caption:$("svCaption").value.trim(),hashtags:$("svTags").value.trim(),topic:$("svTopic").value.trim(),description:'',views_count:0,status:'published',created_at:new Date().toISOString()};await socialInsert('social_videos',row);closeModal();socialGo('videos');toast('Video published 🎉');}catch(e){toast('Could not publish video: '+(e.message||'try again'));}
+}
+async function submitTikTokImport(){
+  const link=$("ttLink")?.value.trim(); if(!link)return toast('Paste a TikTok link first');
+  if(!MEDIA_API)return toast('TikTok import needs the media server configured');
+  toast('Fetching video info…');
+  try{
+    const r=await fetch(MEDIA_API+'/api/tiktok/oembed?url='+encodeURIComponent(link));
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.error||'Could not import that link');
+    const dup=(DB.social_videos||[]).find(v=>v.tiktok_video_id===data.tiktok_video_id&&v.status!=='removed');
+    if(dup) return toast('This TikTok video is already on Skill Mate');
+    const row={
+      id:'vid_'+uid(), user_id:ME.id, media_id:null, media_url:data.tiktok_url, mime:'tiktok',
+      source:'tiktok', tiktok_video_id:data.tiktok_video_id, tiktok_url:data.tiktok_url,
+      thumbnail_url:data.thumbnail_url, caption:data.title||'', hashtags:'', topic:data.author_name?('via @'+data.author_name):'',
+      description:'', views_count:0, status:'published', created_at:new Date().toISOString()
+    };
+    await socialInsert('social_videos',row);
+    closeModal(); socialGo('videos'); toast('TikTok video added 🎉');
+  }catch(e){ toast('Could not import: '+(e.message||'try again')); }
+}
+function openSocialUpdateComposer(){if(!ME)return go('auth');$("modalRoot").innerHTML=`<div class="modal" onclick="if(event.target===this)closeModal()"><div class="panel" style="width:min(520px,94vw)"><div class="spread"><h2>Share an update</h2><button class="btn ghost sm" onclick="closeModal()">✕</button></div><textarea id="suBody" rows="5" placeholder="What are you learning or building?" style="width:100%;margin:12px 0"></textarea><input id="suTags" placeholder="#Learning #SkillMate" style="width:100%;margin-bottom:12px"/><button class="btn block" onclick="submitSocialUpdate()">Post update</button></div></div>`}
+async function submitSocialUpdate(){const body=$("suBody").value.trim();if(!body)return toast('Write something first');const row={id:'upd_'+uid(),user_id:ME.id,body,hashtags:$("suTags").value.trim(),status:'published',created_at:new Date().toISOString()};try{await socialInsert('social_updates',row);closeModal();socialGo('updates');toast('Update posted');}catch(e){toast('Could not post update');}}
+
+/* ---------- public profile ---------- */
+function renderProfile(id){
+  const u=DB.users.find(x=>x.id===id)||ME;
+  if(!u){ $("profileBody").innerHTML=`<div class="empty">Profile not found.</div>`; return }
+  const posts=activeRequests().filter(r=>r.user_id===u.id);
+  const isOther=ME&&u.id!==ME.id;
+  $("profileBody").innerHTML=`
+  <div class="panel">
+    <div class="row" style="gap:18px"><img class="avatar" style="width:96px;height:96px" src="${esc(u.avatar)}"/>
+      <div style="flex:1"><h2>${esc(u.business_name||u.name)} ${u.is_owner?'<span class="badge gold">👑 Owner</span>':''}${u.verified?'<span class="badge gold">✔ Verified</span>':''}</h2>
+        <div class="meta">${esc(u.role==="business"?"Business / Artisan":"Apprentice / Job seeker")} • ${esc(u.skill)} • ${esc(u.experience||"")}</div>
+        <div class="meta">📍 ${esc(u.city)}, ${esc(u.state)}</div>
+        <div class="meta">📞 ${ME?esc(u.phone):"Log in to see phone"} ${u.link?`• <a style="color:var(--primary-2)" target="_blank" href="${esc(u.link)}">${esc(u.link)}</a>`:""}</div>
+      </div>
+      ${isOther?`<button class="btn ghost sm" onclick="openDirectChat('${esc(u.id)}')">💬 Message</button>`:""}
+    </div>
+    <p style="margin-top:16px">${esc(u.bio||"No bio yet.")}</p>
+  </div>
+  <h3 style="margin:26px 0 12px">Requests by ${esc(u.name)} (${posts.length})</h3>
+  <div class="grid">${posts.length?posts.map(card).join(""):`<div class="empty">No active requests.</div>`}</div>`;
+}
+
+/* ---------- direct messages (listing chats + user-to-user chats) ---------- */
+let DM_SELECTED=null, DM_POLL=null;
+function dmConversationId(requestId,a,b){ return "listing:"+requestId+":"+[String(a),String(b)].sort().join(":"); }
+function directConversationId(a,b){ return "direct:"+[String(a),String(b)].sort().join(":"); }
+function dmRowsForUser(){
+  if(!ME) return [];
+  const rows=(DB.messages||[]).filter(m=>(m.chat_type==="listing"||m.chat_type==="direct") && (m.sender_id===ME.id||m.recipient_id===ME.id));
+  const map={};
+  for(const m of rows){ const other=m.sender_id===ME.id?m.recipient_id:m.sender_id; if(!other) continue; const key=m.conversation_id||((m.chat_type==="direct"?"direct:":"listing:"+(m.request_id||"")+":")+[ME.id,other].sort().join(":")); (map[key]??=[]).push(m); }
+  return Object.entries(map).map(([id,msgs])=>{
+    msgs.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    const last=msgs[msgs.length-1];
+    const otherId=last.sender_id===ME.id?last.recipient_id:last.sender_id;
+    const u=DB.users.find(x=>x.id===otherId)||{id:otherId,name:"Skill Mate user",avatar:""};
+    const req=DB.requests.find(x=>x.id===last.request_id);
+    return {id,msgs,last,other:u,request:req,kind:last.chat_type};
+  }).sort((a,b)=>new Date(b.last.created_at)-new Date(a.last.created_at));
+}
+function ensureDMMarkup(){
+  if($("dmCenter")) return;
+  document.body.insertAdjacentHTML("beforeend",`<div id="dmCenter" class="chat-center hidden">
+    <aside class="chat-center-side" id="dmSide"></aside>
+    <section class="chat-center-main">
+      <div class="chat-center-head"><div><b id="dmTitle">Messages</b><div id="dmSub" class="meta">Your conversations</div></div><button class="btn ghost sm" onclick="closeMessages()">✕</button></div>
+      <div id="dmBody" class="chat-center-body"></div>
+      <div class="chat-center-input"><input id="dmInput" placeholder="Write a message…" onkeydown="if(event.key==='Enter'){event.preventDefault();sendDM()}"/><button class="btn" onclick="sendDM()">Send</button></div>
+    </section></div>`);
+}
+function renderDMList(){
+  const side=$("dmSide"); if(!side)return;
+  const rows=dmRowsForUser();
+  const header=`<div style="display:flex;align-items:center;gap:8px;padding:11px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface-2);z-index:2"><button class="btn ghost sm" onclick="closeMessages()">← Back</button><b>Conversations</b></div>`;
+  const body=rows.length?rows.map(c=>`<div class="chat-convo ${DM_SELECTED?.id===c.id?"active":""}" onclick="selectDM('${esc(c.id)}')"><img class="av" src="${esc(c.other.avatar||"")}"/><div style="min-width:0;flex:1"><b>${esc(c.other.name)}</b><div class="meta" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.request?.title||(c.kind==="direct"?"Direct message":"Listing chat"))}</div><div class="meta" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.last.body)}</div></div></div>`).join(""):`<div class="empty">No conversations yet.<br>Open a listing and tap Chat, or message someone from their profile.</div>`;
+  side.innerHTML=header+body;
+}
+function renderDMThread(){
+  if(!DM_SELECTED)return;
+  const body=$("dmBody"),title=$("dmTitle"),sub=$("dmSub"); if(!body)return;
+  const rows=dmRowsForUser(); const c=rows.find(x=>x.id===DM_SELECTED.id)||DM_SELECTED;
+  const other=c.other||DM_SELECTED.owner||{name:"User",avatar:""};
+  title.textContent=other.name||"Messages"; sub.textContent=c.request?.title||DM_SELECTED.request?.title||(( c.kind||DM_SELECTED.kind)==="direct"?"Direct message":"Listing chat");
+  const msgs=c.msgs||dmMessagesById(DM_SELECTED.id);
+  body.innerHTML=msgs.length?msgs.map(m=>`<div class="chat-msg ${m.sender_id===ME.id?"me":"admin"}">${esc(m.body)}<span class="t">${m.sender_id===ME.id?"You":esc(other.name)} • ${timeAgo(m.created_at)}</span></div>`).join(""):`<div class="empty">Start the conversation.</div>`;
+  body.scrollTop=body.scrollHeight;
+}
+function dmMessagesById(cid){return (DB.messages||[]).filter(m=>(m.chat_type==="listing"||m.chat_type==="direct")&&m.conversation_id===cid).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));}
+async function selectDM(id){ const c=dmRowsForUser().find(x=>x.id===id); if(c) DM_SELECTED=c; $("dmCenter")?.classList.remove("show-side"); renderDMList(); renderDMThread(); await markDMRead(); }
+async function markDMRead(){
+  if(!DM_SELECTED||!ME)return;
+  const rows=dmMessagesById(DM_SELECTED.id).filter(m=>m.recipient_id===ME.id&&!m.read_by_recipient);
+  if(!rows.length)return;
+  rows.forEach(m=>m.read_by_recipient=true);
+  if(SB){
+    const {data,error}=await SB.from("messages").update({read_by_recipient:true}).eq("conversation_id",DM_SELECTED.id).eq("recipient_id",ME.id).eq("read_by_recipient",false).select();
+    if(error||!data||!data.length) console.error("Failed to mark DM read:",error||"no rows updated — check RLS policy on messages table");
+  } else save();
+  updateChatBadge();
+}
+async function sendDM(){
+  if(!ME)return go("auth"); if(!DM_SELECTED)return toast("Select a conversation first");
+  const input=$("dmInput"), val=input?.value.trim(); if(!val)return;
+  const kind=DM_SELECTED.kind||"listing";
+  const req=DM_SELECTED.request; const owner=DM_SELECTED.owner||DM_SELECTED.other;
+  const target=owner?.id || (DM_SELECTED.other&&DM_SELECTED.other.id);
+  if(!target)return toast("Recipient unavailable");
+  const cid=DM_SELECTED.cid||DM_SELECTED.id||(kind==="direct"?directConversationId(ME.id,target):dmConversationId(req?.id||DM_SELECTED.requestId,ME.id,target));
+  const m={id:uid(),user_id:ME.id,sender:"user",sender_id:ME.id,recipient_id:target,request_id:kind==="direct"?null:(req?.id||DM_SELECTED.requestId||null),conversation_id:cid,chat_type:kind,body:val,read_by_admin:true,read_by_user:true,read_by_recipient:false,created_at:new Date().toISOString()};
+  input.value=""; DB.messages.push(m); save();
+  if(SB){const {error}=await SB.from("messages").insert(m);if(error){DB.messages.pop();save();return toast("Message failed to send");}}
+  DM_SELECTED={...DM_SELECTED,id:cid,cid,kind,request:req,owner:target===ME.id?ME:(DB.users.find(x=>x.id===target)||owner)};
+  renderDMList();renderDMThread(); recordActivity(kind==="direct"?"direct_message_sent":"message_sent",{request_id:req?.id||null,recipient_id:target});
+}
+function openListingChat(rid){
+  if(!ME)return go("auth");
+  if(isDemoId(rid)) return demoNotice();
+  const r=DB.requests.find(x=>x.id===rid); if(!r)return;
+  if(r.user_id===ME.id)return toast("This is your listing");
+  const other=DB.users.find(x=>x.id===r.user_id)||{id:r.user_id,name:"Listing owner",avatar:""};
+  const cid=dmConversationId(r.id,ME.id,r.user_id);
+  ensureDMMarkup();
+  const existing=dmRowsForUser().find(x=>x.id===cid);
+  DM_SELECTED=existing||{id:cid,cid,kind:"listing",request:r,owner:other,other,requestId:r.id,msgs:[]};
+  $("dmCenter").classList.remove("hidden");
+  $("dmCenter").classList.remove("show-side"); // came from a specific listing's Chat button — go straight to that thread
+  renderDMList();renderDMThread(); if(!DM_POLL)DM_POLL=setInterval(()=>{ if(!ME||!( $("dmCenter")&&!$("dmCenter").classList.contains("hidden")))return; apiLoadAll().then(()=>{renderDMList();renderDMThread();markDMRead();}); },5000);
+  markDMRead();
+}
+function openDirectChat(uid_){
+  if(!ME)return go("auth");
+  if(uid_===ME.id)return toast("This is your own profile");
+  const other=DB.users.find(x=>x.id===uid_); if(!other)return toast("User not found");
+  const cid=directConversationId(ME.id,uid_);
+  ensureDMMarkup();
+  const existing=dmRowsForUser().find(x=>x.id===cid);
+  DM_SELECTED=existing||{id:cid,cid,kind:"direct",request:null,owner:other,other,msgs:[]};
+  $("dmCenter").classList.remove("hidden");
+  $("dmCenter").classList.remove("show-side"); // came from a specific profile's Message button — go straight to that thread
+  renderDMList();renderDMThread(); if(!DM_POLL)DM_POLL=setInterval(()=>{ if(!ME||!( $("dmCenter")&&!$("dmCenter").classList.contains("hidden")))return; apiLoadAll().then(()=>{renderDMList();renderDMThread();markDMRead();}); },5000);
+  markDMRead();
+}
+function openMessages(){
+  if(!ME)return go("auth");
+  ensureDMMarkup();
+  const box=$("dmCenter");
+  box.classList.remove("hidden");
+  // Always land on the conversation list when opened from the nav bar — no
+  // longer auto-selecting/jumping into whatever the most recent chat was.
+  box.classList.add("show-side");
+  renderDMList();
+  renderDMThread();
+  if(!DM_POLL)DM_POLL=setInterval(()=>{if(!ME||box.classList.contains("hidden"))return;apiLoadAll().then(()=>{renderDMList();renderDMThread();markDMRead();});},5000);
+}
+function closeMessages(){ const box=$("dmCenter");if(box)box.classList.add("hidden"); }
+function DM_CLOSE(){closeMessages();DM_SELECTED=null;if(DM_POLL){clearInterval(DM_POLL);DM_POLL=null;}}
+function updateChatBadge(){
+  // Two separate inboxes, two separate badges: the floating 💬 button is
+  // customer-support chat only, the bottom-nav "Messages" item is DM
+  // (listing/direct) chat only. These used to be added together into one
+  // combined number shown on both badges, which made it look like replying
+  // to a DM cleared a support notification and vice versa.
+  const dmUnread=(DB.messages||[]).filter(m=>(m.chat_type==="listing"||m.chat_type==="direct")&&m.recipient_id===ME?.id&&!m.read_by_recipient).length;
+  const supportUnread=(DB.messages||[]).filter(m=>m.sender==="admin"&&m.user_id===ME?.id&&!m.read_by_user&&(m.chat_type||"support")==="support").length;
+  const b=$("chatBadge"); if(b){ b.textContent=supportUnread; b.classList.toggle("hidden",!supportUnread); }
+  const nb=$("navChatBadge"); if(nb){ nb.textContent=dmUnread>99?"99+":dmUnread; nb.classList.toggle("hidden",!dmUnread); }
+}
+// Keeps the nav Chat badge accurate even while the person is browsing elsewhere
+// in the app (not just while a chat panel happens to be open).
+async function pollUnreadMessages(){
+  if(!ME||!SB) return;
+  try{ const {data}=await SB.from("messages").select("*").or(`recipient_id.eq.${ME.id},sender_id.eq.${ME.id},user_id.eq.${ME.id}`);
+    if(data){ DB.messages=data; save(); } }
+  catch(e){ /* offline or table not reachable — badge just won't refresh this tick */ }
+  updateChatBadge();
+}
+
+/* ---------- customer support chat ---------- */
+let CHAT_OPEN=false, CHAT_POLL=null, CHAT_MSGS=[];
+function toggleChat(){
+  if(!ME){ toast("Log in to chat with support"); return go('auth'); }
+  CHAT_OPEN=!CHAT_OPEN;
+  $("chatPanel").classList.toggle("hidden",!CHAT_OPEN);
+  if(CHAT_OPEN){ loadChat(); if(!CHAT_POLL) CHAT_POLL=setInterval(loadChat,4000); }
+  else updateChatBadge();
+}
+async function loadChat(){
+  if(!ME) return;
+  if(SB){
+    const {data}=await SB.from("messages").select("*").eq("user_id",ME.id).order("created_at",{ascending:true});
+    // messages shares this table with listing/direct chats, which also stamp
+    // user_id on the sender's own messages — filter those out here or a
+    // user's DM history leaks into their support-chat thread (and vice versa
+    // on the admin side). Only rows with no chat_type (legacy) or "support"
+    // belong in customer-support chat.
+    if(data) CHAT_MSGS=data.filter(m=>!m.chat_type||m.chat_type==="support");
+  } else {
+    // shared "messages" store (same key admin.html reads) so support replies —
+    // and the admin seeing this user's messages at all — work in test mode too.
+    DB.messages = LS.get("messages", DB.messages);
+    CHAT_MSGS = DB.messages.filter(m=>m.user_id===ME.id&&(!m.chat_type||m.chat_type==="support")).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  }
+  renderChat();
+  if(CHAT_OPEN) await markChatRead();
+  updateChatBadge();
+}
+function renderChat(){
+  const box=$("chatBody"); if(!box) return;
+  box.innerHTML = CHAT_MSGS.length ? CHAT_MSGS.map(m=>
+    `<div class="chat-msg ${m.sender==='user'?'me':'admin'}">${esc(m.body)}<span class="t">${m.sender==='user'?'You':'Support'} • ${timeAgo(m.created_at)}</span></div>`
+  ).join("") : `<div class="empty" style="padding:20px;font-size:13px">Say hello 👋 — our team usually replies within a day.</div>`;
+  box.scrollTop=box.scrollHeight;
+}
+async function sendChatMsg(){
+  if(!ME) return go('auth');
+  const val=$("chatInput").value.trim(); if(!val) return;
+  const m={id:uid(),user_id:ME.id,sender:"user",chat_type:"support",body:val,read_by_admin:false,read_by_user:true,created_at:new Date().toISOString()};
+  $("chatInput").value="";
+  CHAT_MSGS.push(m); renderChat();
+  if(SB){ const {error}=await SB.from("messages").insert(m); if(error) toast("Message failed to send"); }
+  else { DB.messages.push(m); save(); }
+}
+async function markChatRead(){
+  const unread=CHAT_MSGS.filter(m=>m.sender==="admin"&&!m.read_by_user);
+  if(!unread.length) return;
+  unread.forEach(m=>m.read_by_user=true);
+  if(SB){
+    // .select() so a blocked/failed update (RLS, stale row, etc.) is visible
+    // instead of silently reappearing as "unread" on the next poll/reload.
+    const {data,error}=await SB.from("messages").update({read_by_user:true}).eq("user_id",ME.id).eq("sender","admin").eq("read_by_user",false).select();
+    if(error||!data||!data.length) console.error("Failed to mark support messages read:",error||"no rows updated — check RLS policy on messages table");
+  }
+  else save();
+}
+
+
+/* ---------- landing slideshow ---------- */
+const LANDING_IMAGES=[
+  "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=1800&q=85",
+  "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1800&q=85",
+  "https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&fit=crop&w=1800&q=85"
+];
+LANDING_IMAGES.forEach(src=>{const im=new Image();im.src=src;});
+let landingIndex=0;
+function renderLanding(){
+  const bg=$("landingBg"), dots=$("landingDots"); if(!bg||!dots)return;
+  bg.style.backgroundImage=`url("${LANDING_IMAGES[landingIndex]}")`;
+  dots.innerHTML=LANDING_IMAGES.map((_,i)=>`<span class="landing-dot ${i===landingIndex?"on":""}"></span>`).join("");
+}
+function startLanding(){
+  renderLanding(); clearInterval(window._landingTimer);
+  window._landingTimer=setInterval(()=>{ landingIndex=(landingIndex+1)%LANDING_IMAGES.length; renderLanding(); },5000);
+}
+function openAnnouncements(){
+  const anns=(DB.announcements||[]).filter(x=>x.status!=="archived" && (!x.target_user_id || x.target_user_id===ME?.id));
+  $("modalRoot").innerHTML=`<div class="modal" onclick="if(event.target===this)closeModal()"><div class="panel" style="width:min(620px,94vw)">
+    <div class="spread"><div><h2>Announcements</h2><p class="meta" style="margin:4px 0 0">Public messages and Skill Mate updates</p></div><button class="btn ghost sm" onclick="closeModal()">✕</button></div>
+    <div style="margin-top:18px">${anns.length?anns.map(x=>`<div class="panel" style="padding:16px;margin-bottom:10px"><div class="spread"><b>${esc(x.title)}</b><span class="badge ${x.force?"red":"grey"}">${x.force?"Important":"Update"}</span></div><p style="line-height:1.6;margin:8px 0">${esc(x.message)}</p><div class="meta">${timeAgo(x.created_at)}</div></div>`).join(""):`<div class="empty">No announcements right now.</div>`}</div>
+  </div></div>`;
+  if(ME) localStorage.setItem("sm_announcements_seen_"+ME.id,JSON.stringify(anns.map(x=>x.id)));
+  updateAnnouncementBadge();
+}
+function updateAnnouncementBadge(){
+  const seen=ME?JSON.parse(localStorage.getItem("sm_announcements_seen_"+ME.id)||"[]"):[];
+  const unread=(DB.announcements||[]).filter(x=>x.status!=="archived"&&(!x.target_user_id||x.target_user_id===ME?.id)&&!seen.includes(x.id)).length;
+  $("announcementUnread")?.classList.toggle("hidden",!unread);
+}
+function checkForceAnnouncements(){
+  const anns=(DB.announcements||[]).filter(x=>x.force&&x.status!=="archived"&&(!x.target_user_id||x.target_user_id===ME?.id));
+  const seen=ME?JSON.parse(localStorage.getItem("sm_force_announcements_seen_"+ME.id)||"[]"):[];
+  const unseen=anns.filter(x=>!seen.includes(x.id));
+  if(!unseen.length)return;
+  $("modalRoot").innerHTML=`<div class="modal"><div class="panel" style="width:min(620px,94vw)">
+    <div class="spread"><h2>📢 Important announcement</h2><span class="badge red">Please read</span></div>
+    <div style="margin-top:16px">${unseen.map(x=>`<div style="padding:14px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px"><h3>${esc(x.title)}</h3><p style="line-height:1.6">${esc(x.message)}</p></div>`).join("")}</div>
+    <button class="btn block" onclick="ackForceAnnouncements()">I have read this</button>
+  </div></div>`;
+}
+function ackForceAnnouncements(){
+  const anns=(DB.announcements||[]).filter(x=>x.force&&x.status!=="archived"&&(!x.target_user_id||x.target_user_id===ME?.id));
+  if(ME)localStorage.setItem("sm_force_announcements_seen_"+ME.id,JSON.stringify(anns.map(x=>x.id)));
+  closeModal(); updateAnnouncementBadge();
+  checkWhatsAppChannelPopup();
+}
+/* ---- WhatsApp channel popup — standalone, not part of the announcement system ---- */
+const WA_CHANNEL_LINK="https://whatsapp.com/channel/0029VbDjQS58qIzxyqkEag0j";
+function checkWhatsAppChannelPopup(){
+  if(sessionStorage.getItem("sm_wa_channel_shown"))return;
+  if($("waChannelPopup"))return; // already open
+  sessionStorage.setItem("sm_wa_channel_shown","1");
+  document.body.insertAdjacentHTML("beforeend",`<div id="waChannelPopup"><div class="wa-box panel">
+    <button class="wa-x" onclick="closeWaChannelPopup()">✕</button>
+    <div class="wa-icon">📣</div>
+    <h3>Official SkillMate Channel</h3>
+    <p>Join now for job alerts &amp; updates.</p>
+    <a class="wa-btn" href="${WA_CHANNEL_LINK}" target="_blank" rel="noopener noreferrer">🔵 Join on WhatsApp</a>
+  </div></div>`);
+}
+function closeWaChannelPopup(){ $("waChannelPopup")?.remove(); }
+function maybeShowWaChannelPopup(){
+  const anns=(DB.announcements||[]).filter(x=>x.force&&x.status!=="archived"&&(!x.target_user_id||x.target_user_id===ME?.id));
+  const seen=ME?JSON.parse(localStorage.getItem("sm_force_announcements_seen_"+ME.id)||"[]"):[];
+  const pendingForced=anns.some(x=>!seen.includes(x.id));
+  if(pendingForced)return; // will fire from ackForceAnnouncements() once they dismiss it
+  checkWhatsAppChannelPopup();
+}
+function renderSettings(){
+  if(!ME){$("settingsBody").innerHTML=`<div class="empty">Please log in first.</div>`;return;}
+  const dark=document.documentElement.dataset.theme==="dark";
+  $("settingsBody").innerHTML=`<div class="sec-head"><div><h2>Settings</h2><p>Control how Skill Mate looks and how your account works.</p></div></div>
+  <div class="panel"><div class="spread"><div><b>Dark theme</b><div class="meta">Use a complete dark interface across the app.</div></div><button class="btn ${dark?"":"ghost"}" onclick="toggleTheme()">${dark?"🌙 Dark":"☀️ Light"}</button></div></div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:20px 0"/>
+  <div><b>Account</b><p class="meta">Deleting your account removes your profile and listings. This action cannot be undone.</p><button class="btn danger" onclick="deleteMyAccount()">Delete my account</button></div></div>`;
+}
+function applyTheme(){
+  const theme=localStorage.getItem("sm_theme")||"light";
+  document.documentElement.dataset.theme=theme;
+}
+function toggleTheme(){
+  localStorage.setItem("sm_theme",document.documentElement.dataset.theme==="dark"?"light":"dark"); applyTheme(); renderSettings();
+}
+async function deleteMyAccount(){
+  if(!ME)return;
+  if(!confirm("Delete your Skill Mate account? Your profile and listings will be removed. This cannot be undone."))return;
+  const id=ME.id;
+  try{
+    if(SB){
+      await SB.from("requests").delete().eq("user_id",id);
+      const {error}=await SB.from("profiles").delete().eq("id",id);
+      if(error) await SB.from("profiles").update({status:"deleted"}).eq("id",id);
+    }
+    DB.requests=DB.requests.filter(r=>r.user_id!==id); DB.users=DB.users.filter(u=>u.id!==id);
+    save(); ME=null; localStorage.removeItem("sm_me"); paintAuth(); closeModal(); go("landing"); toast("Your account has been deleted.");
+  }catch(e){toast("Could not delete the account: "+e.message)}
+}
+
+/* ---------- seed + boot ---------- */
+function seed(){ /* intentionally empty: production starts with no demo listings/users */ }
+function renderAll(){ renderHome(); renderBrowse(); if(MAP) renderNearby(); }
+
+(async function boot(){
+  applyTheme();
+  $("yr").textContent=new Date().getFullYear();
+  const opts=`<option value="">All states</option>`+Object.keys(STATES).map(s=>`<option>${s}</option>`).join("");
+  ["hState","fState","nState"].forEach(i=>$(i).innerHTML=opts);
+  ["pState","suState"].forEach(i=>$(i).innerHTML=Object.keys(STATES).map(s=>`<option>${s}</option>`).join(""));
+  $("hState").value="Lagos";
+  populateCities("fState","fCity",true);
+  populateCities("pState","pCity");
+  populateCities("suState","suCity");
+  document.getElementById("skillList").innerHTML=SKILLS.map(s=>`<option value="${s.n}">`).join("");
+  $("suRole").addEventListener("change",e=>$("bizOnly").classList.toggle("hidden",e.target.value!=="business"));
+  $("suCreator").addEventListener("change",e=>$("creatorOnly").classList.toggle("hidden",!e.target.checked));
+  const urlRef=new URLSearchParams(location.search).get("ref");
+  if(urlRef){
+    if($("suRefCode")) $("suRefCode").value=urlRef.toUpperCase();
+    if(!ME){ go("auth"); authTab("signup"); toast("Referral code applied — sign up to get started!"); }
+  }
+  if(!LS.get("launch_clean_2026_08",false)){ DB.requests=[]; save(); LS.set("launch_clean_2026_08",true); }
+  seed(); await apiLoadAll(); await refreshMe(); await loadSocialData(); paintAuth(); renderAll(); updateAnnouncementBadge();
+  if(ME){ loadChat(); go("home"); checkForceAnnouncements(); maybeShowWaChannelPopup(); setTimeout(()=>{ checkPendingReviews(); checkClosePrompts(); },900); }
+  else { go("landing"); startLanding(); setTimeout(checkWhatsAppChannelPopup,1500); }
+  setInterval(async()=>{
+    if(!ME) return;
+    loadChat(); pollUnreadMessages();
+    await refreshMe(); paintAuth();
+    if(!$("view-dashboard").classList.contains("hidden")) renderDashboard();
+    updateAnnouncementBadge();
+  },8000);
+  // Runs for logged-out visitors too, so listing changes (removed, featured,
+  // new sample listings from the admin generator) show up without a reload.
+  setInterval(refreshListings,10000);
+  // restore media index after service restart
+  if(MEDIA_API) fetch(MEDIA_API+"/api/restore").then(r=>r.json()).then(j=>console.log("media restored:",j.count)).catch(()=>{});
+})();
+
+
+</script>
+</body>
+</html>
